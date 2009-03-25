@@ -1,0 +1,141 @@
+/********************************************************************************
+** Form generated from reading ui file 'search.ui'
+**
+** Created: Wed Feb 11 17:21:55 2009
+**      by: Qt User Interface Compiler version 4.4.3
+**
+** WARNING! All changes made in this file will be lost when recompiling ui file!
+********************************************************************************/
+
+#ifndef UI_SEARCH_H
+#define UI_SEARCH_H
+
+#include <QtCore/QVariant>
+#include <QtGui/QAction>
+#include <QtGui/QApplication>
+#include <QtGui/QButtonGroup>
+#include <QtGui/QFrame>
+#include <QtGui/QTableWidget>
+#include <QtGui/QVBoxLayout>
+#include <QtGui/QWidget>
+
+QT_BEGIN_NAMESPACE
+
+class Ui_Form
+{
+public:
+    QVBoxLayout *verticalLayout_2;
+    QFrame *frame;
+    QTableWidget *tableWidget;
+    QFrame *frame_2;
+
+    void setupUi(QWidget *Form)
+    {
+    if (Form->objectName().isEmpty())
+        Form->setObjectName(QString::fromUtf8("Form"));
+    Form->resize(472, 362);
+    verticalLayout_2 = new QVBoxLayout(Form);
+    verticalLayout_2->setObjectName(QString::fromUtf8("verticalLayout_2"));
+    frame = new QFrame(Form);
+    frame->setObjectName(QString::fromUtf8("frame"));
+    frame->setFrameShape(QFrame::StyledPanel);
+    frame->setFrameShadow(QFrame::Raised);
+
+    verticalLayout_2->addWidget(frame);
+
+    tableWidget = new QTableWidget(Form);
+    if (tableWidget->columnCount() < 9)
+        tableWidget->setColumnCount(9);
+    QTableWidgetItem *__colItem = new QTableWidgetItem();
+    tableWidget->setHorizontalHeaderItem(0, __colItem);
+    QTableWidgetItem *__colItem1 = new QTableWidgetItem();
+    tableWidget->setHorizontalHeaderItem(1, __colItem1);
+    QTableWidgetItem *__colItem2 = new QTableWidgetItem();
+    tableWidget->setHorizontalHeaderItem(2, __colItem2);
+    QTableWidgetItem *__colItem3 = new QTableWidgetItem();
+    tableWidget->setHorizontalHeaderItem(3, __colItem3);
+    QTableWidgetItem *__colItem4 = new QTableWidgetItem();
+    tableWidget->setHorizontalHeaderItem(4, __colItem4);
+    QTableWidgetItem *__colItem5 = new QTableWidgetItem();
+    tableWidget->setHorizontalHeaderItem(5, __colItem5);
+    QTableWidgetItem *__colItem6 = new QTableWidgetItem();
+    tableWidget->setHorizontalHeaderItem(6, __colItem6);
+    QTableWidgetItem *__colItem7 = new QTableWidgetItem();
+    tableWidget->setHorizontalHeaderItem(7, __colItem7);
+    QTableWidgetItem *__colItem8 = new QTableWidgetItem();
+    tableWidget->setHorizontalHeaderItem(8, __colItem8);
+    if (tableWidget->rowCount() < 1)
+        tableWidget->setRowCount(1);
+    QTableWidgetItem *__tableItem = new QTableWidgetItem();
+    tableWidget->setItem(0, 0, __tableItem);
+    QTableWidgetItem *__tableItem1 = new QTableWidgetItem();
+    tableWidget->setItem(0, 1, __tableItem1);
+    QTableWidgetItem *__tableItem2 = new QTableWidgetItem();
+    tableWidget->setItem(0, 2, __tableItem2);
+    QTableWidgetItem *__tableItem3 = new QTableWidgetItem();
+    tableWidget->setItem(0, 3, __tableItem3);
+    QTableWidgetItem *__tableItem4 = new QTableWidgetItem();
+    tableWidget->setItem(0, 4, __tableItem4);
+    QTableWidgetItem *__tableItem5 = new QTableWidgetItem();
+    tableWidget->setItem(0, 5, __tableItem5);
+    QTableWidgetItem *__tableItem6 = new QTableWidgetItem();
+    tableWidget->setItem(0, 6, __tableItem6);
+    QTableWidgetItem *__tableItem7 = new QTableWidgetItem();
+    tableWidget->setItem(0, 7, __tableItem7);
+    QTableWidgetItem *__tableItem8 = new QTableWidgetItem();
+    tableWidget->setItem(0, 8, __tableItem8);
+    tableWidget->setObjectName(QString::fromUtf8("tableWidget"));
+
+    verticalLayout_2->addWidget(tableWidget);
+
+    frame_2 = new QFrame(Form);
+    frame_2->setObjectName(QString::fromUtf8("frame_2"));
+    frame_2->setFrameShape(QFrame::StyledPanel);
+    frame_2->setFrameShadow(QFrame::Raised);
+
+    verticalLayout_2->addWidget(frame_2);
+
+
+    retranslateUi(Form);
+
+    QMetaObject::connectSlotsByName(Form);
+    } // setupUi
+
+    void retranslateUi(QWidget *Form)
+    {
+    Form->setWindowTitle(QApplication::translate("Form", "Form", 0, QApplication::UnicodeUTF8));
+    tableWidget->horizontalHeaderItem(0)->setText(QApplication::translate("Form", "Tlen ID", 0, QApplication::UnicodeUTF8));
+    tableWidget->horizontalHeaderItem(1)->setText(QApplication::translate("Form", "Imi\304\231", 0, QApplication::UnicodeUTF8));
+    tableWidget->horizontalHeaderItem(2)->setText(QApplication::translate("Form", "Nazwisko", 0, QApplication::UnicodeUTF8));
+    tableWidget->horizontalHeaderItem(3)->setText(QApplication::translate("Form", "Nick", 0, QApplication::UnicodeUTF8));
+    tableWidget->horizontalHeaderItem(4)->setText(QApplication::translate("Form", "E-mail", 0, QApplication::UnicodeUTF8));
+    tableWidget->horizontalHeaderItem(5)->setText(QApplication::translate("Form", "Miasto", 0, QApplication::UnicodeUTF8));
+    tableWidget->horizontalHeaderItem(6)->setText(QApplication::translate("Form", "Szko\305\202a", 0, QApplication::UnicodeUTF8));
+    tableWidget->horizontalHeaderItem(7)->setText(QApplication::translate("Form", "P\305\202e\304\207", 0, QApplication::UnicodeUTF8));
+    tableWidget->horizontalHeaderItem(8)->setText(QApplication::translate("Form", "Wiek", 0, QApplication::UnicodeUTF8));
+
+    const bool __sortingEnabled = tableWidget->isSortingEnabled();
+    tableWidget->setSortingEnabled(false);
+    tableWidget->item(0, 0)->setText(QApplication::translate("Form", "enkidu_pg2@tlen.pl", 0, QApplication::UnicodeUTF8));
+    tableWidget->item(0, 1)->setText(QApplication::translate("Form", "Micha\305\202", 0, QApplication::UnicodeUTF8));
+    tableWidget->item(0, 2)->setText(QApplication::translate("Form", "Wi\305\233niewski", 0, QApplication::UnicodeUTF8));
+    tableWidget->item(0, 3)->setText(QApplication::translate("Form", "enkidu", 0, QApplication::UnicodeUTF8));
+    tableWidget->item(0, 4)->setText(QApplication::translate("Form", "enkidu@enkidu.drl.pl", 0, QApplication::UnicodeUTF8));
+    tableWidget->item(0, 5)->setText(QApplication::translate("Form", "K\304\231trzyn", 0, QApplication::UnicodeUTF8));
+    tableWidget->item(0, 6)->setText(QApplication::translate("Form", "PG", 0, QApplication::UnicodeUTF8));
+    tableWidget->item(0, 7)->setText(QApplication::translate("Form", "M", 0, QApplication::UnicodeUTF8));
+    tableWidget->item(0, 8)->setText(QApplication::translate("Form", "21", 0, QApplication::UnicodeUTF8));
+
+    tableWidget->setSortingEnabled(__sortingEnabled);
+    Q_UNUSED(Form);
+    } // retranslateUi
+
+};
+
+namespace Ui {
+    class Form: public Ui_Form {};
+} // namespace Ui
+
+QT_END_NAMESPACE
+
+#endif // UI_SEARCH_H

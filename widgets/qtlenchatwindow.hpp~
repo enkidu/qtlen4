@@ -1,0 +1,36 @@
+#include <QMainWindow>
+#include <QDateTime>
+#include <QtCore>
+#include <QCloseEvent>
+#include <QSettings>
+#include <QScrollBar>
+#include <QTextDocument>
+#include "qtlentextedit.hpp"
+
+class QTlenChatWindow: public QMainWindow
+{
+	Q_OBJECT
+	public:
+		QTlenChatWindow(QWidget * parent = 0, Qt::WFlags f = 0 );
+		~QTlenChatWindow(){};
+		void setContactInfo(QString, QString);
+		void setMyInfo(QString);
+	private:
+		QString 		jid;	//jid rozmówcy
+		QString			nick;	//nick rozmówcy
+		QString			myNick;
+		QSettings		*settings;
+		QString			myColor, myBg, chatColor, chatBg;
+		QString			formatMessage(QDateTime, QString, QString, QString, QString);
+		QScrollBar		*vertScroll;
+	public slots:
+		void			showMessage(QString, QDateTime);	//body i stamp
+		void			sendMessage();
+		void			setTyping(bool);
+	signals:
+		void			message(QString, QString);
+		void			widgetClosed(QString);
+	protected:
+		void			closeEvent(QCloseEvent *event);
+};
+

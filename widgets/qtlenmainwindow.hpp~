@@ -1,0 +1,10 @@
+#ifndef QTLEN_MAIN_WINDOW_HPP
+#define QTLEN_MAIN_WINDOW_HPP
+
+
+
+class QTlenMainWindow: public QMainWindow
+{
+}
+
+#endif //QTLEN_MAIN_WINDOW_HPP

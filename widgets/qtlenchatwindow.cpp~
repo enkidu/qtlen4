@@ -1,0 +1,116 @@
+#include "chat.h"
+#include "ui_chat.h"
+
+QTlenChatWindow::QTlenChatWindow(QWidget * parent, Qt::WFlags f):QMainWindow(parent, f)
+{
+	QAction *actionTyping;
+	QWidget *centralwidget;
+	QGridLayout *gridLayout;
+	QTextEdit *te_chatWindow;
+	QTlenTextEdit *te_chatInput;
+	QPushButton *pb_chatSend;
+	QToolBar *toolBar;
+	resize(343, 449);
+	actionTyping = new QAction(this);
+	QIcon icon;
+	icon.addPixmap(QPixmap(QString::fromUtf8(":/icons/icons/draw-freehand.png")), QIcon::Normal, QIcon::Off);
+	actionTyping->setIcon(icon);
+	centralwidget = new QWidget(this);
+	gridLayout = new QGridLayout(centralwidget);
+	gridLayout->setSpacing(0);
+	gridLayout->setMargin(0);
+	te_chatWindow = new QTextEdit(centralwidget);
+	QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
+	sizePolicy.setHorizontalStretch(0);
+	sizePolicy.setVerticalStretch(3);
+	sizePolicy.setHeightForWidth(te_chatWindow->sizePolicy().hasHeightForWidth());
+	te_chatWindow->setSizePolicy(sizePolicy);
+	te_chatWindow->setReadOnly(true);
+
+	gridLayout->addWidget(te_chatWindow, 0, 0, 1, 1);
+
+	te_chatInput = new QTlenTextEdit(centralwidget);
+	QSizePolicy sizePolicy1(QSizePolicy::Expanding, QSizePolicy::Expanding);
+	sizePolicy1.setHorizontalStretch(0);
+	sizePolicy1.setVerticalStretch(1);
+	sizePolicy1.setHeightForWidth(te_chatInput->sizePolicy().hasHeightForWidth());
+	te_chatInput->setSizePolicy(sizePolicy1);
+
+	gridLayout->addWidget(te_chatInput, 1, 0, 1, 1);
+
+	pb_chatSend = new QPushButton(centralwidget);
+	pb_chatSend->setMaximumSize(QSize(60, 16777215));
+	pb_chatSend->setLayoutDirection(Qt::RightToLeft);
+
+	gridLayout->addWidget(pb_chatSend, 2, 0, 1, 1);
+
+	chatWindow->setCentralWidget(centralwidget);
+	toolBar = new QToolBar(chatWindow);
+	toolBar->setLayoutDirection(Qt::RightToLeft);
+	toolBar->setMovable(false);
+	toolBar->setAllowedAreas(Qt::TopToolBarArea);
+	chatWindow->addToolBar(Qt::TopToolBarArea, toolBar);
+
+	toolBar->addAction(actionTyping);
+	connect(ui.pb_chatSend,		SIGNAL(clicked()),		this,	SLOT(sendMessage()));
+	connect(ui.te_chatInput,	SIGNAL(returnPressed()),	this,	SLOT(sendMessage()));
+	ui.te_chatWindow->setReadOnly(true);
+	ui.actionTyping->setEnabled(false);
+	settings = new QSettings(QDir::homePath() + "/.qtlen4/config", QSettings::IniFormat);
+	myColor = settings->value("/preferences/sent/color", "#000000").toString();
+	myBg = settings->value("/preferences/sent/bground", "#ffffff").toString();
+	chatColor = settings->value("/preferences/received/color", "#000000").toString();
+	chatBg = settings->value("/preferences/received/bground", "#ffffff").toString();
+	vertScroll = ui.te_chatWindow->verticalScrollBar();
+};
+
+void QTlenChatWindow::setContactInfo(QString jid, QString name)
+{
+	this->jid=jid;
+	this->nick=name;
+	setWindowTitle(name);
+}
+
+void QTlenChatWindow::showMessage(QString body, QDateTime stamp)
+{
+	ui.te_chatWindow->moveCursor(QTextCursor::End);
+	ui.te_chatWindow->insertHtml(formatMessage(stamp, nick, body, chatColor, chatBg));
+	ui.te_chatWindow->insertHtml("<br>");
+	vertScroll->setValue(vertScroll->maximum());
+};
+
+void QTlenChatWindow::closeEvent(QCloseEvent *event)
+{
+	event->accept();
+	emit widgetClosed(jid);
+};
+
+void QTlenChatWindow::sendMessage()
+{
+	emit message(jid, ui.te_chatInput->toPlainText());
+	ui.te_chatWindow->moveCursor(QTextCursor::End);
+	ui.te_chatWindow->insertHtml(formatMessage(QDateTime::currentDateTime(), myNick, ui.te_chatInput->toPlainText(), myColor, myBg));
+	ui.te_chatWindow->insertHtml("<br>");
+	vertScroll->setValue(vertScroll->maximum());
+	ui.te_chatInput->clear();
+};
+
+void QTlenChatWindow::setTyping(bool yesno)
+{
+	ui.actionTyping->setEnabled(yesno);
+};
+
+void QTlenChatWindow::setMyInfo(QString nick)
+{
+	myNick = nick;
+};
+
+QString QTlenChatWindow::formatMessage(QDateTime time, QString nick, QString body, QString color, QString bground)
+{
+	body = Qt::escape(body);
+	body.replace("\n\r", "<br>");
+	body.replace("\n", "<br>");
+	body.replace("\r", "<br>");
+	QString format("<div style=\"color: %1;\"><b>%2 %3</b><br>%4</div>");
+	return format.arg(color, time.time().toString(), nick, body);
+};

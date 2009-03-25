@@ -1,0 +1,407 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>configDialog</class>
+ <widget class="QWidget" name="configDialog">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>480</width>
+    <height>264</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <layout class="QHBoxLayout" name="horizontalLayout_2">
+   <item>
+    <widget class="QListWidget" name="listWidget">
+     <property name="sizePolicy">
+      <sizepolicy hsizetype="Fixed" vsizetype="Expanding">
+       <horstretch>0</horstretch>
+       <verstretch>0</verstretch>
+      </sizepolicy>
+     </property>
+     <property name="minimumSize">
+      <size>
+       <width>150</width>
+       <height>0</height>
+      </size>
+     </property>
+     <property name="maximumSize">
+      <size>
+       <width>150</width>
+       <height>16777215</height>
+      </size>
+     </property>
+     <property name="baseSize">
+      <size>
+       <width>150</width>
+       <height>0</height>
+      </size>
+     </property>
+     <item>
+      <property name="text">
+       <string>Połączenie</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Lista kontaktów</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Wygląd</string>
+      </property>
+     </item>
+     <item>
+      <property name="text">
+       <string>Sieć</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item>
+    <widget class="QStackedWidget" name="stackedWidget">
+     <widget class="QWidget" name="connection_page">
+      <layout class="QFormLayout" name="formLayout">
+       <item row="0" column="0">
+        <widget class="QLabel" name="label">
+         <property name="text">
+          <string>Login</string>
+         </property>
+         <property name="buddy">
+          <cstring>le_login</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="0" column="1">
+        <widget class="QLineEdit" name="le_login"/>
+       </item>
+       <item row="1" column="0">
+        <widget class="QLabel" name="label_2">
+         <property name="text">
+          <string>Hasło</string>
+         </property>
+         <property name="buddy">
+          <cstring>le_password</cstring>
+         </property>
+        </widget>
+       </item>
+       <item row="1" column="1">
+        <widget class="QLineEdit" name="le_password">
+         <property name="echoMode">
+          <enum>QLineEdit::Password</enum>
+         </property>
+        </widget>
+       </item>
+       <item row="2" column="1">
+        <widget class="QCheckBox" name="cb_autoConnect">
+         <property name="text">
+          <string>Połącz po uruchomieniu</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="0">
+        <widget class="QLabel" name="label_3">
+         <property name="text">
+          <string>Domyślny status</string>
+         </property>
+        </widget>
+       </item>
+       <item row="3" column="1">
+        <widget class="QComboBox" name="cb_defaultState">
+         <property name="enabled">
+          <bool>false</bool>
+         </property>
+         <item>
+          <property name="text">
+           <string>Dostępny</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>:/icons/icons/16x16/online.png</normaloff>:/icons/icons/16x16/online.png</iconset>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Porozmawiajmy</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>:/icons/icons/16x16/chatty.png</normaloff>:/icons/icons/16x16/chatty.png</iconset>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Zaraz wracam</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>:/icons/icons/16x16/away.png</normaloff>:/icons/icons/16x16/away.png</iconset>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Wracam później</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>:/icons/icons/16x16/xa.png</normaloff>:/icons/icons/16x16/xa.png</iconset>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Zajęty</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>:/icons/icons/16x16/dnd.png</normaloff>:/icons/icons/16x16/dnd.png</iconset>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>Niewidoczny</string>
+          </property>
+          <property name="icon">
+           <iconset>
+            <normaloff>:/icons/icons/16x16/invisible.png</normaloff>:/icons/icons/16x16/invisible.png</iconset>
+          </property>
+         </item>
+         <item>
+          <property name="text">
+           <string>--Poprzedni</string>
+          </property>
+         </item>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="roster_page">
+      <layout class="QVBoxLayout" name="verticalLayout">
+       <item>
+        <widget class="QCheckBox" name="cb_showOfflines">
+         <property name="text">
+          <string>Pokazuj nieobecnych</string>
+         </property>
+         <property name="icon">
+          <iconset>
+           <normaloff>:/icons/icons/view-user-offline-kopete.png</normaloff>:/icons/icons/view-user-offline-kopete.png</iconset>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="cb_showExtendedInfo">
+         <property name="text">
+          <string>Pokazuj rozszerzone informacje o kontaktach</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="cb_showAvatars">
+         <property name="text">
+          <string>Pokazuj avatary użytkowników</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="cb_showDescriptions">
+         <property name="text">
+          <string>Pokazuj opisy</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QCheckBox" name="cb_showJidInRoster">
+         <property name="text">
+          <string>Pokazuj login użytkownika na liście kontaktów</string>
+         </property>
+        </widget>
+       </item>
+       <item>
+        <widget class="QGroupBox" name="gb_expandPolicy">
+         <property name="title">
+          <string>Rozwijanie grup</string>
+         </property>
+         <layout class="QVBoxLayout" name="verticalLayout_2">
+          <item>
+           <widget class="QRadioButton" name="rb_expandedState">
+            <property name="text">
+             <string>Domyślnie rozwinięte</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="rb_collapsedState">
+            <property name="text">
+             <string>Domyślnie zwinięte</string>
+            </property>
+           </widget>
+          </item>
+          <item>
+           <widget class="QRadioButton" name="rb_previousState">
+            <property name="text">
+             <string>Pamiętaj status</string>
+            </property>
+           </widget>
+          </item>
+         </layout>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="chats_page">
+      <layout class="QVBoxLayout" name="verticalLayout_4">
+       <item>
+        <widget class="QScrollArea" name="scrollArea">
+         <property name="frameShape">
+          <enum>QFrame::NoFrame</enum>
+         </property>
+         <property name="frameShadow">
+          <enum>QFrame::Plain</enum>
+         </property>
+         <property name="horizontalScrollBarPolicy">
+          <enum>Qt::ScrollBarAlwaysOff</enum>
+         </property>
+         <property name="widgetResizable">
+          <bool>true</bool>
+         </property>
+         <widget class="QWidget" name="scrollAreaWidgetContents">
+          <property name="geometry">
+           <rect>
+            <x>0</x>
+            <y>0</y>
+            <width>330</width>
+            <height>261</height>
+           </rect>
+          </property>
+          <layout class="QVBoxLayout" name="verticalLayout_3">
+           <property name="margin">
+            <number>0</number>
+           </property>
+           <item>
+            <widget class="QGroupBox" name="groupBox">
+             <property name="title">
+              <string>Wysłane</string>
+             </property>
+             <layout class="QFormLayout" name="formLayout_4">
+              <property name="fieldGrowthPolicy">
+               <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+              </property>
+              <item row="0" column="0">
+               <widget class="QLabel" name="label_5">
+                <property name="text">
+                 <string>Nick</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QLineEdit" name="le_nick"/>
+              </item>
+              <item row="4" column="0">
+               <widget class="QLabel" name="label_7">
+                <property name="text">
+                 <string>Kolor tła</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="0">
+               <widget class="QLabel" name="label_6">
+                <property name="text">
+                 <string>Kolor tekstu</string>
+                </property>
+               </widget>
+              </item>
+              <item row="3" column="1">
+               <widget class="QPushButton" name="pb_myColor">
+                <property name="text">
+                 <string>Wybierz</string>
+                </property>
+               </widget>
+              </item>
+              <item row="4" column="1">
+               <widget class="QPushButton" name="pb_myBg">
+                <property name="text">
+                 <string>Wybierz</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+           <item>
+            <widget class="QGroupBox" name="groupBox_2">
+             <property name="title">
+              <string>Odebrane</string>
+             </property>
+             <layout class="QFormLayout" name="formLayout_5">
+              <item row="1" column="0">
+               <widget class="QLabel" name="label_8">
+                <property name="text">
+                 <string>Kolor tekstu</string>
+                </property>
+               </widget>
+              </item>
+              <item row="0" column="1">
+               <widget class="QCheckBox" name="cb_useJID">
+                <property name="text">
+                 <string>Używaj ID zamiast nazwy kontaktu</string>
+                </property>
+               </widget>
+              </item>
+              <item row="1" column="1">
+               <widget class="QPushButton" name="pb_chatColor">
+                <property name="text">
+                 <string>Wybierz</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="1">
+               <widget class="QPushButton" name="pb_chatBg">
+                <property name="text">
+                 <string>Wybierz</string>
+                </property>
+               </widget>
+              </item>
+              <item row="2" column="0">
+               <widget class="QLabel" name="label_9">
+                <property name="text">
+                 <string>Kolor tła</string>
+                </property>
+               </widget>
+              </item>
+             </layout>
+            </widget>
+           </item>
+          </layout>
+         </widget>
+        </widget>
+       </item>
+      </layout>
+     </widget>
+     <widget class="QWidget" name="network_page"/>
+    </widget>
+   </item>
+  </layout>
+ </widget>
+ <resources/>
+ <connections>
+  <connection>
+   <sender>listWidget</sender>
+   <signal>currentRowChanged(int)</signal>
+   <receiver>stackedWidget</receiver>
+   <slot>setCurrentIndex(int)</slot>
+   <hints>
+    <hint type="sourcelabel">
+     <x>62</x>
+     <y>79</y>
+    </hint>
+    <hint type="destinationlabel">
+     <x>216</x>
+     <y>76</y>
+    </hint>
+   </hints>
+  </connection>
+ </connections>
+</ui>

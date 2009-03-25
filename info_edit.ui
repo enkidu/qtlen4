@@ -1,0 +1,295 @@
+<ui version="4.0" >
+ <class>myInfo</class>
+ <widget class="QWidget" name="myInfo" >
+  <property name="geometry" >
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>375</width>
+    <height>410</height>
+   </rect>
+  </property>
+  <property name="sizePolicy" >
+   <sizepolicy vsizetype="Fixed" hsizetype="Fixed" >
+    <horstretch>0</horstretch>
+    <verstretch>0</verstretch>
+   </sizepolicy>
+  </property>
+  <property name="windowTitle" >
+   <string>Moje Dane</string>
+  </property>
+  <layout class="QFormLayout" name="formLayout" >
+   <property name="fieldGrowthPolicy" >
+    <enum>QFormLayout::AllNonFixedFieldsGrow</enum>
+   </property>
+   <property name="margin" >
+    <number>2</number>
+   </property>
+   <item row="0" column="0" >
+    <widget class="QLabel" name="label" >
+     <property name="text" >
+      <string>Imię</string>
+     </property>
+    </widget>
+   </item>
+   <item row="0" column="1" >
+    <widget class="QLineEdit" name="le_first" />
+   </item>
+   <item row="1" column="0" >
+    <widget class="QLabel" name="label_2" >
+     <property name="text" >
+      <string>Nazwisko</string>
+     </property>
+    </widget>
+   </item>
+   <item row="1" column="1" >
+    <widget class="QLineEdit" name="le_last" />
+   </item>
+   <item row="2" column="0" >
+    <widget class="QLabel" name="label_3" >
+     <property name="text" >
+      <string>Nick</string>
+     </property>
+    </widget>
+   </item>
+   <item row="2" column="1" >
+    <widget class="QLineEdit" name="le_nick" />
+   </item>
+   <item row="3" column="0" >
+    <widget class="QLabel" name="label_4" >
+     <property name="text" >
+      <string>E-mail</string>
+     </property>
+    </widget>
+   </item>
+   <item row="3" column="1" >
+    <widget class="QLineEdit" name="le_mail" />
+   </item>
+   <item row="4" column="0" >
+    <widget class="QLabel" name="label_10" >
+     <property name="text" >
+      <string>Miejscowość</string>
+     </property>
+    </widget>
+   </item>
+   <item row="4" column="1" >
+    <widget class="QLineEdit" name="le_city" />
+   </item>
+   <item row="5" column="0" >
+    <widget class="QLabel" name="label_11" >
+     <property name="text" >
+      <string>Szkoła / uczelnia</string>
+     </property>
+    </widget>
+   </item>
+   <item row="5" column="1" >
+    <widget class="QLineEdit" name="le_school" />
+   </item>
+   <item row="6" column="0" >
+    <widget class="QLabel" name="label_5" >
+     <property name="text" >
+      <string>Rok urodzenia</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="0" >
+    <widget class="QLabel" name="label_6" >
+     <property name="text" >
+      <string>Płeć</string>
+     </property>
+    </widget>
+   </item>
+   <item row="7" column="1" >
+    <widget class="QComboBox" name="cb_sex" >
+     <item>
+      <property name="text" >
+       <string>-- nieustawione --</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>mężczyzna</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>kobieta</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="8" column="0" >
+    <widget class="QLabel" name="label_7" >
+     <property name="text" >
+      <string>Szukam...</string>
+     </property>
+    </widget>
+   </item>
+   <item row="8" column="1" >
+    <widget class="QComboBox" name="cb_lookingFor" >
+     <item>
+      <property name="text" >
+       <string>-- nieustawione --</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>kogoś do rozmowy</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>przyjaźni</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>flirtu / romansu</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>miłości</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>nie szukam</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="9" column="0" >
+    <widget class="QLabel" name="label_8" >
+     <property name="text" >
+      <string>Zawód</string>
+     </property>
+    </widget>
+   </item>
+   <item row="9" column="1" >
+    <widget class="QComboBox" name="cb_job" >
+     <item>
+      <property name="text" >
+       <string>-- nieustawione --</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>uczeń</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>student</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>rolnik</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>menedżer</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>specjalista/wolny zawód</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>urzędnik/usługi/administracja</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>bezrobotny</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>emeryt/rencista</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>gospodyni domowa</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>nauczyciel</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>lekarz</string>
+      </property>
+     </item>
+     <item>
+      <property name="text" >
+       <string>inny</string>
+      </property>
+     </item>
+    </widget>
+   </item>
+   <item row="10" column="1" >
+    <widget class="QCheckBox" name="cb_showMyStatus" >
+     <property name="text" >
+      <string>Pokazuj mój status w katalogu</string>
+     </property>
+    </widget>
+   </item>
+   <item row="11" column="1" >
+    <widget class="QPushButton" name="pb_save" >
+     <property name="text" >
+      <string>Zapisz</string>
+     </property>
+    </widget>
+   </item>
+   <item row="6" column="1" >
+    <widget class="QSpinBox" name="sb_year" >
+     <property name="accelerated" >
+      <bool>true</bool>
+     </property>
+     <property name="minimum" >
+      <number>0</number>
+     </property>
+     <property name="maximum" >
+      <number>2100</number>
+     </property>
+     <property name="value" >
+      <number>0</number>
+     </property>
+    </widget>
+   </item>
+  </layout>
+  <zorder>label</zorder>
+  <zorder>le_first</zorder>
+  <zorder>label_2</zorder>
+  <zorder>le_last</zorder>
+  <zorder>label_3</zorder>
+  <zorder>le_nick</zorder>
+  <zorder>label_4</zorder>
+  <zorder>le_mail</zorder>
+  <zorder>label_5</zorder>
+  <zorder>label_6</zorder>
+  <zorder>cb_sex</zorder>
+  <zorder>label_7</zorder>
+  <zorder>cb_lookingFor</zorder>
+  <zorder>label_8</zorder>
+  <zorder>cb_job</zorder>
+  <zorder>cb_showMyStatus</zorder>
+  <zorder>le_city</zorder>
+  <zorder>le_school</zorder>
+  <zorder>label_10</zorder>
+  <zorder>label_11</zorder>
+  <zorder>pb_save</zorder>
+  <zorder>pushButton_2</zorder>
+  <zorder>sb_year</zorder>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>

@@ -1,0 +1,42 @@
+<RCC>
+    <qresource prefix="/icons" >
+        <file>icons/preferences-plugin-script.png</file>
+        <file>icons/application-exit.png</file>
+        <file>icons/configure.png</file>
+        <file>icons/dialog-cancel.png</file>
+        <file>icons/status_unknown.png</file>
+        <file>icons/draw-freehand.png</file>
+        <file>icons/network-connect.png</file>
+        <file>icons/network-disconnect.png</file>
+        <file>icons/user-properties.png</file>
+        <file>icons/view-user-offline-kopete.png</file>
+        <file>icons/list-add-user.png</file>
+        <file>icons/list-remove-user.png</file>
+        <file>icons/help-about.png</file>
+        <file>icons/view-history.png</file>
+        <file>icons/meeting-attending.png</file>
+        <file>icons/16x16/online.png</file>
+        <file>icons/16x16/chatty.png</file>
+        <file>icons/16x16/away.png</file>
+        <file>icons/16x16/xa.png</file>
+        <file>icons/16x16/dnd.png</file>
+        <file>icons/16x16/invisible.png</file>
+        <file>icons/16x16/offline.png</file>
+        <file>icons/32x32/online.png</file>
+        <file>icons/32x32/chatty.png</file>
+        <file>icons/32x32/away.png</file>
+        <file>icons/32x32/xa.png</file>
+        <file>icons/32x32/dnd.png</file>
+        <file>icons/32x32/invisible.png</file>
+        <file>icons/32x32/offline.png</file>
+        <file>icons/64x64/default_av.png</file>
+        <file>qtlen4_pl.qm</file>
+        <file>icons/64x64/look.png</file>
+        <file>icons/64x64/network.png</file>
+        <file>icons/64x64/roster.png</file>
+        <file>icons/64x64/mask.png</file>
+        <file>icons/32x32/add.png</file>
+        <file>icons/32x32/clear.png</file>
+        <file>icons/32x32/search.png</file>
+    </qresource>
+</RCC>

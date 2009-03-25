@@ -1,0 +1,19 @@
+#ifndef CHAT_EDIT_H
+#define CHAT_EDIT_H
+
+#include <QtCore>
+#include <QTextEdit>
+#include <QKeyEvent>
+class QTlenTextEdit:  QTextEdit
+{
+	Q_OBJECT
+	public:
+		QTlenTextEdit(QWidget * parent = 0);
+		~QTlenTextEdit(){};
+	protected:
+		void			keyPressEvent( QKeyEvent * e );
+	signals:
+		void			returnPressed();
+};
+
+#endif // CHAT_EDIT_H
