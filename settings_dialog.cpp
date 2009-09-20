@@ -56,25 +56,25 @@ QTlenConfigDialog::QTlenConfigDialog(QWidget * parent):QWidget(parent)
     horizontalLayout_2	->addWidget(listWidget);
 
     verticalLayout = new QVBoxLayout(roster_page);
-    cb_showOfflines = new QCheckBox(roster_page);
+    cb_showOfflines = new QCheckBox(tr("Show offline users"),roster_page);
     QIcon icon6;
     icon6.addPixmap(QPixmap(QString::fromUtf8(":/icons/icons/view-user-offline-kopete.png")), QIcon::Normal, QIcon::Off);
     cb_showOfflines->setIcon(icon6);
 
     verticalLayout->addWidget(cb_showOfflines);
 
-    cb_showExtendedInfo = new QCheckBox(roster_page);
+    cb_showExtendedInfo = new QCheckBox(tr("Show extended info"), roster_page);
 
     verticalLayout->addWidget(cb_showExtendedInfo);
 
-    cb_showAvatars = new QCheckBox(roster_page);
+    cb_showAvatars = new QCheckBox(tr("Show contacts avatars"), roster_page);
 
     verticalLayout->addWidget(cb_showAvatars);
 
-    cb_showDescriptions = new QCheckBox(roster_page);
+    cb_showDescriptions = new QCheckBox(tr("Show contacts descriptions"),roster_page);
     verticalLayout->addWidget(cb_showDescriptions);
 
-    cb_showJidInRoster = new QCheckBox(roster_page);
+    cb_showJidInRoster = new QCheckBox(tr("Show contacts IDs"),roster_page);
 
     verticalLayout->addWidget(cb_showJidInRoster);
 
@@ -139,11 +139,11 @@ QTlenConfigDialog::QTlenConfigDialog(QWidget * parent):QWidget(parent)
 
     groupBox_2 = new QGroupBox(scrollAreaWidgetContents);
     formLayout_5 = new QFormLayout(groupBox_2);
-    label_8 = new QLabel(groupBox_2);
+    label_8 = new QLabel(tr("Contact text color"),groupBox_2);
 
     formLayout_5->setWidget(1, QFormLayout::LabelRole, label_8);
 
-    cb_useJID = new QCheckBox(groupBox_2);
+    cb_useJID = new QCheckBox(tr("Use ID instead of contact name"),groupBox_2);
 
     formLayout_5->setWidget(0, QFormLayout::FieldRole, cb_useJID);
 
@@ -155,7 +155,7 @@ QTlenConfigDialog::QTlenConfigDialog(QWidget * parent):QWidget(parent)
 
     formLayout_5->setWidget(2, QFormLayout::FieldRole, pb_chatBg);
 
-    label_9 = new QLabel(groupBox_2);
+    label_9 = new QLabel(tr("Contact text background"),groupBox_2);
 
     formLayout_5->setWidget(2, QFormLayout::LabelRole, label_9);
 

@@ -3,6 +3,7 @@
 #include <QtXml>
 #include <QTimer>
 #include <QDateTime>
+#include "qtlencryptedsocket.h"
 #include "defines.h"
 #include "qtlen_parser.h"
 class QTlen: public QObject
@@ -15,22 +16,23 @@ class QTlen: public QObject
 		//QTlenParser	*parser;
 		bool		is_connected();
 	private:
-		bool		isConnected;
-		quint16		port;
-		QString		username;
-		QString		password;
-		QString		server;
-		QString		remote;
-		QString		sessionId;
-		QString		hash;
-                QString         token;
-		QByteArray	cache;
-		QHttp		*http;
-		QTcpSocket	*socket;
-		QString		decode(QString);
-		QByteArray	encode(QString);
-		QByteArray	tlenHash(QString, QString);
-                QTlenMailConfig mailConfig;
+                bool                isConnected;
+                quint16             port;
+                QString             username;
+                QString             password;
+                QString             server;
+                QString             remote;
+                QString             sessionId;
+                QString             hash;
+                QString             token;
+                QByteArray          cache;
+                QHttp               *http;
+                QTlenCryptedSocket  *socket;
+                QString             decode(QString);
+                QByteArray          encode(QString);
+                QByteArray          tlenHash(QString, QString);
+                QTlenMailConfig     mailConfig;
+                QTimer              *pingTimer;
 	signals:
 		void		connecting();
 		void		connected();
@@ -63,6 +65,8 @@ class QTlen: public QObject
                 void            receivedMailConfig(QTlenMailConfig);
 		void		receivedToken(QString);
 		void		readyToGetRoster();
+                void            imageReadyToDownload(QString rt, QString idt, QString sender);
+                void            sendImage(QString idt, QString jid);
 	public slots:
 		void		makeConnection();
 		void		sendMessage(QString, QString);

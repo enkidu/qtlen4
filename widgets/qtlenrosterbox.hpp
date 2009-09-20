@@ -4,7 +4,7 @@
 #include <QtGui>
 #include <QSettings>
 #include <QtCore>
-
+#include "qtlenrosteritemdelegate.hpp"
 #include "defines.h"
 
 class QTlenRosterBox: public QTreeWidget

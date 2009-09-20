@@ -1,26 +1,17 @@
 #include "qtlenchatwindow.hpp"
 
-QTlenChatWindow::QTlenChatWindow(QWidget * parent, Qt::WFlags f):QMainWindow(parent, f)
+QTlenChatWidget::QTlenChatWidget(QWidget * parent, Qt::WFlags f):QWidget(parent, f)
 {
-
-        resize(343, 449); //TODO: zapamiętanie rozmiaru okna
+    settings        = new QSettings(QDir::homePath() + "/.qtlen4/config", QSettings::IniFormat);
 	timer = new QTimer(this);
 	timer->setInterval(30000);
 	timer->setSingleShot(true);
-        QIcon icon;
-	QIcon icon2;
-	icon.addPixmap(QPixmap(":/icons/icons/draw-freehand.png"), QIcon::Normal, QIcon::Off);
-	icon2.addPixmap(QPixmap(":/icons/icons/help-about.png"), QIcon::Normal, QIcon::Off);
-        actionTyping    = new QAction(icon, QString::fromUtf8(""),  this);
-        actionTyping    ->setEnabled(false);
-	actionInfo	= new QAction(icon2, QString::fromUtf8(""),  this);
-        centralwidget   = new QWidget(this);
 
-        verticalLayout  = new QVBoxLayout(centralwidget);
+        verticalLayout  = new QVBoxLayout(this);
         verticalLayout  ->setSpacing(0);
         verticalLayout  ->setMargin(0);
 
-	te_chatWindow   = new QTextBrowser(centralwidget);
+        te_chatWindow   = new QTextBrowser(this);
 
 	QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	sizePolicy.setHorizontalStretch(0);
@@ -28,7 +19,7 @@ QTlenChatWindow::QTlenChatWindow(QWidget * parent, Qt::WFlags f):QMainWindow(par
 	sizePolicy.setHeightForWidth(te_chatWindow->sizePolicy().hasHeightForWidth());
         te_chatWindow   ->setSizePolicy(sizePolicy);
 
-        te_chatInput    = new QTlenTextEdit(centralwidget);
+        te_chatInput    = new QTlenTextEdit(this);
 
 	QSizePolicy sizePolicy1(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	sizePolicy1.setHorizontalStretch(0);
@@ -38,16 +29,6 @@ QTlenChatWindow::QTlenChatWindow(QWidget * parent, Qt::WFlags f):QMainWindow(par
 
         verticalLayout  ->addWidget(te_chatWindow);
         verticalLayout  ->addWidget(te_chatInput);
-
-        setCentralWidget(centralwidget);
-
-        toolBar         = new QToolBar(this);
-        toolBar         ->setLayoutDirection(Qt::RightToLeft);
-        toolBar         ->setMovable(false);
-        toolBar         ->setAllowedAreas(Qt::TopToolBarArea);
-        addToolBar(Qt::TopToolBarArea, toolBar);
-        toolBar         ->addAction(actionTyping);
-	toolBar		->addAction(actionInfo);
 
 	connect(te_chatInput,
 		SIGNAL(returnPressed()),
@@ -61,25 +42,33 @@ QTlenChatWindow::QTlenChatWindow(QWidget * parent, Qt::WFlags f):QMainWindow(par
 		SIGNAL(timeout()),
 		this,
 		SLOT(typingStopped()));
-        settings        = new QSettings(QDir::homePath() + "/.qtlen4/config", QSettings::IniFormat);
+        /*connect(actionImage,
+                SIGNAL(triggered()),
+                this,
+                SLOT(openImage()));*/
         myColor         = settings->value("/preferences/sent/color", "#000000").toString();
         myBg            = settings->value("/preferences/sent/bground", "#ffffff").toString();
         chatColor       = settings->value("/preferences/received/color", "#000000").toString();
         chatBg          = settings->value("/preferences/received/bground", "#ffffff").toString();
         vertScroll      = te_chatWindow->verticalScrollBar();
-	document = te_chatWindow->document();
+        document = te_chatWindow->document();
 	cursor = QTextCursor(document);
-	if (!testAttribute(Qt::WA_DeleteOnClose)) this->setAttribute(Qt::WA_DeleteOnClose, true);
+        if (!testAttribute(Qt::WA_DeleteOnClose)) this->setAttribute(Qt::WA_DeleteOnClose, true);
+        //te_chatInput->focusWidget();
 }
 
-void QTlenChatWindow::setContactInfo(const QString jid, const QString name)
+void QTlenChatWidget::setContactInfo(const QString jid, const QString name)
 {
 	this->jid=jid;
 	this->nick=name;
-	setWindowTitle(name);
+        //setWindowTitle(name);
+        /*connect(actionInfo,
+                SIGNAL(triggered()),
+                this,
+                SLOT(requestInfo()));*/
 }
 
-void QTlenChatWindow::showMessage(const QString body,const  QDateTime stamp)
+void QTlenChatWidget::showMessage(const QString body,const  QDateTime stamp)
 {
 	cursor		    .movePosition(QTextCursor::End);
 	QBrush		    background;
@@ -98,28 +87,33 @@ void QTlenChatWindow::showMessage(const QString body,const  QDateTime stamp)
 	vertScroll	    ->setValue(vertScroll->maximum());
 }
 
-void QTlenChatWindow::closeEvent(QCloseEvent *event)
+void QTlenChatWidget::closeEvent(QCloseEvent *event)
 {
 	timer->stop();
 	timer->deleteLater();
-	document->deleteLater();
+        document->deleteLater();
 	emit widgetClosed(jid);
 	event->accept();
 }
 
-void QTlenChatWindow::keyPressHandler()
+void QTlenChatWidget::keyPressHandler()
 {
     if (!timer->isActive())
 	emit typing(jid, true);
     timer->start();
 }
 
-void QTlenChatWindow::typingStopped()
+void QTlenChatWidget::typingStopped()
 {
     emit typing(jid, false);
 }
 
-void QTlenChatWindow::sendMessage()
+void QTlenChatWidget::requestInfo()
+{
+    emit infoRequest(jid);
+}
+
+void QTlenChatWidget::sendMessage()
 {
     if(!te_chatInput->toPlainText().isEmpty())
     {
@@ -144,26 +138,47 @@ void QTlenChatWindow::sendMessage()
     }
 }
 
-void QTlenChatWindow::setTyping(bool yesno)
+void QTlenChatWidget::setTyping(bool yesno)
 {
-        actionTyping->setEnabled(yesno);
+        //actionTyping->setEnabled(yesno);
 }
 
-void QTlenChatWindow::setMyInfo(const QString nick)
+void QTlenChatWidget::openImage()
+{
+     QString fileName = QFileDialog::getOpenFileName(0, tr("Choose file"),
+                                                 QDir::homePath(),
+                                                 tr("Images (*.png *.xpm *.jpg *.gif)"));
+     if(!fileName.isNull())
+     {
+        QImage image;
+        if(image.load(fileName))
+        {
+            cursor.movePosition(QTextCursor::End);
+            cursor.insertBlock();
+            cursor.insertImage(image);
+            emit sendImage(jid, fileName);
+        }
+    }
+}
+
+void QTlenChatWidget::setMyInfo(const QString nick)
 {
 	myNick = nick;
 }
-QString QTlenChatWindow::formatMessage(const QDateTime time,const QString nick,QString body,const QString color)
+QString QTlenChatWidget::formatMessage(const QDateTime time,const QString nick,QString body,const QString color)
 {
+    QRegExp rx("(?#Protocol)(?:(?:ht|f)tp(?:s?)\\:\\/\\/|~/|/)?(?#Username:Password)(?:\\w+:\\w+@)?(?#Subdomains)(?:(?:[-\\w]+\\.)+(?#TopLevel Domains)(?:com|org|net|gov|mil|biz|info|mobi|name|aero|jobs|museum|travel|[a-z]{2}))(?#Port)(?::[\\d]{1,5})?(?#Directories)(?:(?:(?:/(?:[-\\w~!$+|.,=]|%[a-f\\d]{2})+)+|/)+|\\?|#)?(?#Query)(?:(?:\\?(?:[-\\w~!$+|.,*:]|%[a-f\\d{2}])+=(?:[-\\w~!$+|.,*:=]|%[a-f\\d]{2})*)(?:&(?:[-\\w~!$+|.,*:]|%[a-f\\d{2}])+=(?:[-\\w~!$+|.,*:=]|%[a-f\\d]{2})*)*)*(?#Anchor)(?:#(?:[-\\w~!$+|.,*:=]|%[a-f\\d]{2})*)?");
+    rx.indexIn(body, 0);
+qDebug(QByteArray::number(rx.matchedLength()));
 	body = Qt::escape(body);
 	body.replace("\n\r", "<br>");
 	body.replace("\n", "<br>");
 	body.replace("\r", "<br>");
-	QString format("<div style=\"color: %1;\"><b>%2 %3</b><br>%4</div>");
+        QString format("<div style=\"color: %1;\"><b>%2 %3</b><br>%4</div>");
 	return format.arg(color, time.time().toString(), nick, body);
 }
 
-void QTlenChatWindow::showPreviousMessages(const QList<QTlenMessageStruct> list)
+void QTlenChatWidget::showPreviousMessages(const QList<QTlenMessageStruct> list)
 {
     if (!list.isEmpty())
     {
@@ -183,6 +198,13 @@ void QTlenChatWindow::showPreviousMessages(const QList<QTlenMessageStruct> list)
     }
 }
 
-void QTlenChatWindow::showNotify(const QString text)
+void QTlenChatWidget::showNotify(const QString text)
 {
+}
+
+void QTlenChatWidget::showImage(QPixmap image)
+{
+            cursor.movePosition(QTextCursor::End);
+            cursor.insertBlock();
+            cursor.insertImage(image.toImage());
 }

@@ -1,15 +1,15 @@
 #ifndef QTLEN_PARSER_H
 #define QTLEN_PARSER_H
-#include <QXmlStreamReader>
+#include <QtXml>
 #include <QtCore>
 #include "defines.h"
-/*class QTlenParser : public QObject, QXmlStreamReader
+/*class QTlenParser : public QObject
 {
 	Q_OBJECT
 	public:
 		QTlenParser();
                 ~QTlenParser(){}
-		bool readInput(QByteArray input);
+                bool parse(QByteArray input);
 		QString sessionId;
 	private:
 		void readUnknownElement();

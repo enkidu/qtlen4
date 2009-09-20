@@ -9,7 +9,9 @@ INCLUDEPATH += . \
     widgets
 QT += xml \
     network \
-    sql
+    sql \
+    dbus \
+    crypto
 
 # Input
 HEADERS += chat_manager.h \
@@ -35,7 +37,11 @@ HEADERS += chat_manager.h \
     widgets/qtlenstatuslabel.hpp \
     widgets/qtlenavatarlabel.hpp \
     widgets/qtlenpublicchatswindow.hpp \
-    qtlenpublicchatsmanager.hpp
+    qtlenpublicchatsmanager.hpp \
+    qtlencryptedsocket.h \
+    widgets/qtlenchatcontainer.hpp \
+    widgets/qtlenrosteritem.hpp \
+    widgets/qtlenrosteritemdelegate.hpp
 FORMS += config.ui \
     debug.ui \
     info_edit.ui \
@@ -63,6 +69,10 @@ SOURCES += chat_manager.cpp \
     widgets/qtlenstatuslabel.cpp \
     widgets/qtlenavatarlabel.cpp \
     widgets/qtlenpublicchatswindow.cpp \
-    qtlenpublicchatsmanager.cpp
+    qtlenpublicchatsmanager.cpp \
+    qtlencryptedsocket.cpp \
+    widgets/qtlenchatcontainer.cpp \
+    widgets/qtlenrosteritem.cpp \
+    widgets/qtlenrosteritemdelegate.cpp
 RESOURCES += icons.qrc
 TRANSLATIONS = qtlen4_pl.ts

@@ -8,6 +8,7 @@ QTlenRosterBox::QTlenRosterBox(QWidget * parent):QTreeWidget(parent)
 	offlinesVisible = settings->value("/roster/offlines_visible", false).toBool();
         setSortingEnabled(false);
         setAnimated(1);
+        this->setItemDelegate(new QTlenRosterItemDelegate(this));
 }
 
 void QTlenRosterBox::contextMenuEvent(QContextMenuEvent *event)
@@ -93,66 +94,10 @@ QTreeWidgetItem* QTlenRosterBox::addRosterItem(QString name,
                                                QTreeWidgetItem* node)
 {
         QTreeWidgetItem*    item   = new QTreeWidgetItem(node);
-        QFrame*             frame = new QFrame(this);
-        QHBoxLayout*        hLayout = new QHBoxLayout(frame);
-        hLayout->setAlignment(Qt::AlignTop);
-        QVBoxLayout*        vLayout = new QVBoxLayout();
-        vLayout->setAlignment(Qt::AlignTop);
-	QLabel*             statusIcon = new QLabel(frame);
-        statusIcon->setFixedSize(16,16);
-        switch (type)
-        {
-                case Online:
-                        statusIcon->setPixmap(QPixmap(QString::fromUtf8(":/icons/icons/16x16/online.png")));
-                break;
-                case Chatty:
-                        statusIcon->setPixmap(QPixmap(QString::fromUtf8(":/icons/icons/16x16/chatty.png")));
-                break;
-                case Away:
-                        statusIcon->setPixmap(QPixmap(QString::fromUtf8(":/icons/icons/16x16/away.png")));
-                break;
-                case XA:
-                        statusIcon->setPixmap(QPixmap(QString::fromUtf8(":/icons/icons/16x16/xa.png")));
-                break;
-                case DND:
-                        statusIcon->setPixmap(QPixmap(QString::fromUtf8(":/icons/icons/16x16/dnd.png")));
-                break;
-                case Offline:
-                        statusIcon->setPixmap(QPixmap(QString::fromUtf8(":/icons/icons/16x16/offline.png")));
-                break;
-        }
-
-        hLayout->addWidget(statusIcon);
-        hLayout->addLayout(vLayout);
-        QLabel* nameLabel = new QLabel(name, frame);
-        QFont nameFont;
-        nameFont.setBold(true);
-        nameLabel->setFont(nameFont);
-        vLayout->addWidget(nameLabel);
-	if (!desc.isEmpty() && settings->value("/roster/show_descriptions", false).toBool())
-        {
-            QLabel* descLabel = new QLabel(desc, frame);
-            QFont descFont;
-            descFont.setPointSize(7);
-            descFont.setItalic(true);
-            descLabel->setWordWrap(true);
-            descLabel->setFont(descFont);
-            vLayout->addWidget(descLabel);
-	}
-        //prowizorka
-	if(settings->value("/roster/show_avatars", false).toBool())
-	{
-	    QLabel* avatar = new QLabel();
 	    if(pxAvatar.isNull())
-		avatar->setPixmap(QPixmap(QString::fromUtf8(":/icons/icons/64x64/default_av.png")));
-	    else
-		avatar->setPixmap(pxAvatar);
-	    avatar->setAlignment(Qt::AlignRight);
-	    hLayout->addWidget(avatar);
-	}
-        frame->setLayout(hLayout);
-        setItemWidget(item, 0, frame);
-	return item;
+                pxAvatar=QPixmap(QString::fromUtf8(":/icons/icons/64x64/default_av.png"));
+        item->setData(0, 0, qVariantFromValue(QTlenRosterItem(name, type, desc, jid, pxAvatar)));
+        return item;
 }
 
 QTreeWidgetItem* QTlenRosterBox::addRosterNode(QString group)

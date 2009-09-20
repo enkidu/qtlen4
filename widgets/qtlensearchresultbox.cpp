@@ -19,6 +19,10 @@ void QTlenSearchResultBox::contextMenuEvent(QContextMenuEvent *event)
                 QAction *actionAdd	= new QAction(QString::fromUtf8("Dodaj"), menu);
                 menu -> addAction(actionMessage);
                 menu -> addAction(actionAdd);
+                connect(this,
+                        SIGNAL(itemDoubleClicked(QTreeWidgetItem*,int)),
+                        realParent,
+                        SLOT(menuActionChat()));
                 connect(actionMessage,
                         SIGNAL(triggered()),
 			realParent,

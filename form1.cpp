@@ -21,7 +21,10 @@ QTlenManager::QTlenManager():QObject()
         roster->showOfflines(settings->value("/roster/offlines_visible", false).toBool());
 
 	history = new QTlenHistoryManager();
+	
 
+
+	
 	tlen = new QTlen;
 	tlen->setUserParams(settings->value("/connection/username").toString(), settings->value("/connection/password").toString());
 
@@ -152,6 +155,10 @@ QTlenManager::QTlenManager():QObject()
 		SIGNAL(savingError()),
 		this,
 		SLOT(avatarSavingError()));
+        connect(tlen,
+                SIGNAL(imageReadyToDownload(QString,QString,QString)),
+                chats,
+                SLOT(getImage(QString,QString,QString)));
         //outbound
         connect(mainWindow,
                 SIGNAL(subscribed(QString, bool)),
@@ -192,7 +199,11 @@ QTlenManager::QTlenManager():QObject()
 	connect(mainWindow,
 		SIGNAL(editUser(QTreeWidgetItem*)),
 		this,
-		SLOT(menuActionEdit(QTreeWidgetItem*)));
+                SLOT(menuActionEdit(QTreeWidgetItem*)));
+        connect(chats,
+                SIGNAL(infoRequest(QString)),
+                tlen,
+                SLOT(getInfoAbout(QString)));
 }
 
 void QTlenManager::openConfigDialog()
@@ -245,7 +256,8 @@ void QTlenManager::openSearchDialog()
 
 void QTlenManager::showMessage(QString from, QString body, QDateTime timestamp)
 {
-	sysIcon->showMessage("Message from " + from, body);
+        if (mainWindow->cb_status->currentIndex() != 4)
+            sysIcon->showMessage("Message from " + from, body);
 }
 
 void QTlenManager::respondForAuthenticated()

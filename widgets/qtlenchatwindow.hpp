@@ -1,4 +1,6 @@
-#include <QMainWindow>
+#ifndef QTLENCHATWIDGET_HPP
+#define QTLENCHATWIDGET_HPP
+#include <QWidget>
 #include <QDateTime>
 #include <QtCore>
 #include <QCloseEvent>
@@ -6,23 +8,25 @@
 #include <QtGui>
 #include <QTextDocument>
 #include "qtlentextedit.hpp"
+
 #include "defines.h"
 
-class QTlenChatWindow: public QMainWindow
+class QTlenChatWidget: public QWidget
 {
 	Q_OBJECT
 	public:
-		QTlenChatWindow(QWidget * parent = 0, Qt::WFlags f = 0 );
-		~QTlenChatWindow(){qDebug("chat window closed");}
+                QTlenChatWidget(QWidget * parent = 0, Qt::WFlags f = 0 );
+                ~QTlenChatWidget(){qDebug("chat window closed");}
 		void setContactInfo(QString, QString);
 		void setMyInfo(QString);
-                QAction *actionTyping;
-		QAction *actionInfo;
-                QWidget *centralwidget;
+                //QAction *actionTyping;
+                //QAction *actionInfo;
+                //QAction *actionImage;
+                //QWidget *centralwidget;
                 QVBoxLayout *verticalLayout;
 		QTextBrowser *te_chatWindow;
                 QTlenTextEdit *te_chatInput;
-		QToolBar    *toolBar;
+                //QToolBar    *toolBar;
 		QTimer	    *timer;
 	private:
 		QString 		jid;	//jid rozmówcy
@@ -40,14 +44,20 @@ class QTlenChatWindow: public QMainWindow
 		void			setTyping(bool);
 		void			showPreviousMessages(const QList<QTlenMessageStruct>);
 		void			showNotify(const QString);
+                void                    showImage(QPixmap image);
 	private slots:
 		void			keyPressHandler();
 		void			typingStopped();
+                void                    requestInfo();
+                void                    openImage();
 	signals:
 		void			message(QString, QString);
 		void			typing(QString, bool);
 		void			widgetClosed(QString);
+                void                    infoRequest(QString);
+                void                    sendImage(QString, QString);
 	protected:
 		void			closeEvent(QCloseEvent *event);
 };
 
+#endif

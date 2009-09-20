@@ -1,5 +1,6 @@
 #include <QtCore/QtCore>
-#include "widgets/qtlenchatwindow.hpp"
+#include "qtlenchatcontainer.hpp"
+#include "qtlenchatwindow.hpp"
 #include "roster_manager.h"
 #include "systrayicon.h"
 #include "historymanager.hpp"
@@ -12,7 +13,7 @@ class QTlenChatManager: public QObject
 		struct ChatItem
 		{
 			QString 		jid;
-			QTlenChatWindow		*widget;
+                        QTlenChatWidget		*widget;
 		};
 		int			findIndexOf(QString);
 		void			setTrayIcon(QTlenTrayIcon* icon){this->sysIcon = icon;}
@@ -23,7 +24,7 @@ class QTlenChatManager: public QObject
 		QString 		myNick;
 		QString			myJid;
 		QTlenTrayIcon*		sysIcon;
-
+                QTlenChatContainer*     container;
 	public slots:
 		void			showMessage(QString, QString, QDateTime);
 		void			detachWidget(QString);
@@ -32,8 +33,34 @@ class QTlenChatManager: public QObject
 		void			messageProxy(QString, QString);
 		void			typingStarted(QString);
 		void			typingStopped(QString);
-		QTlenChatWindow*	createWindow(QString);
+                QTlenChatWidget*	createWindow(QString);
+                void                    getImage(QString rt, QString idt, QString sender);
+                void                    gotImage(QString from, QPixmap image);
 	signals:
 		void			sendMessage(QString, QString);
 		void			sendTyping(QString, bool);
+                void                    infoRequest(QString);
+};
+
+class QTlenImageFetcher : public QObject
+{
+    Q_OBJECT
+    public:
+        QTlenImageFetcher();
+        ~QTlenImageFetcher() {}
+    public slots:
+        void getImage(QString rt, QString idt, QString sender, QString jid);
+    private slots:
+        void getPart();
+    private:
+        QTcpSocket* http;
+        QString rt;
+        QString idt;
+        QString sender;
+        QString jid;
+        QByteArray cache;
+        bool first;
+        int size;
+    signals:
+        void gotImage(QString, QPixmap);
 };

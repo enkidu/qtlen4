@@ -1,14 +1,17 @@
 #include "qtlen.h"
+#include <QtCrypto>
 QTlen::QTlen():QObject()
 {
 	http = new QHttp;
-	socket = new QTcpSocket;
-	isConnected = false;
+        socket = new QTlenCryptedSocket;
+        isConnected = false;
+        pingTimer = new QTimer(this);
+        pingTimer->setInterval(55000);
 	//parser = new QTlenParser;
 	connect(http,	SIGNAL(done(bool)),				this,	SLOT(readServerInfo()));
 	connect(this,	SIGNAL(serverConnect()),			this,	SLOT(openConnection()));
 	connect(socket,	SIGNAL(readyRead()),				this,	SLOT(checkResponse()));
-	connect(this,	SIGNAL(connected()),				this,	SLOT(pinguj()));
+        connect(this,	SIGNAL(connected()),				pingTimer,	SLOT(start()));
 	//connect(parser,	SIGNAL(connected()),				this,	SLOT(writeLoginString()));
 	connect(this,	SIGNAL(authenticated()),			this,	SLOT(getMailInfo()));
 	connect(this,
@@ -17,6 +20,11 @@ QTlen::QTlen():QObject()
 	connect(this,	SIGNAL(parse(QByteArray)),			this,	SLOT(parseResponse(QByteArray)));
 	connect(socket,	SIGNAL(error(QAbstractSocket::SocketError)), 	this,	SLOT(displayError(QAbstractSocket::SocketError)));
 	connect(this,	SIGNAL(startConnection()),			this,	SLOT(makeConnection()));
+
+        connect(pingTimer,
+                SIGNAL(timeout()),
+                this,
+                SLOT(pinguj()));
 }
 
 bool QTlen::is_connected()
@@ -56,14 +64,16 @@ void QTlen::readServerInfo()
 void QTlen::openConnection()
 {
 	socket->connectToHost(server,port);
-	socket->write("<s v=\"9\" t=\"06000224\">");
-};
+        socket->write("<s s=\"1\" v=\"9\" t=\"06000224\">");
+}
 
 void QTlen::checkResponse()
 {
-	cache.append(socket->readAll());
+        QByteArray tmp = socket->readAll();
+        //qDebug(tmp);
+        cache.append(tmp);
         QDomDocument doc("");
-        if(doc.setContent("<package>"+cache+"</package>") or cache.startsWith("<s"))
+        if(doc.setContent("<package>"+cache+"</package>") or cache.startsWith("<s") or cache.startsWith("<cipher"))
         //if (cache.endsWith(">"))
 	{
 		emit (parse(cache));
@@ -83,8 +93,9 @@ void QTlen::parseResponse(QByteArray input)
 {
 	//debug, żeby sobie poczytać, o czym gada z nami serwer
 	emit receivedXml(input);
+
 	//profilaktycznie puszczamy pinga
-	socket->write("  \t  ");
+        //socket->write("  \t  ");
 	QDomDocument doc("");
 	//brzydka sztuczka, konieczna do poradzenia sobie z nawałem śmiecia w jednym pakiecie
 	doc.setContent("<package>"+input+"</package>");
@@ -95,10 +106,34 @@ void QTlen::parseResponse(QByteArray input)
 		if (node.nodeName() == "s") 
 		{
 			sessionId=node.toElement().attribute("i","");
-			emit connected();
-			QByteArray loginString("<iq type=\"set\" id=\""+sessionId.toAscii()+"\"><query xmlns=\"jabber:iq:auth\"><username>"+username.toAscii()+"</username><digest>"+tlenHash(password, sessionId)+"</digest><resource>QTlen4</resource><host>tlen.pl</host></query></iq>");
-			socket->write(loginString);
+                        if (node.toElement().attribute("k1","") == "")
+                        {
+                            emit connected();
+                            QByteArray loginString("<iq type=\"set\" id=\""+sessionId.toAscii()+"\"><query xmlns=\"jabber:iq:auth\"><username>"+username.toAscii()+"</username><digest>"+tlenHash(password, sessionId)+"</digest><resource>QTlen4</resource><host>tlen.pl</host></query></iq>");
+                            socket->write(loginString);
+                        }
+                        else
+                        {
+                            QString k1 = node.toElement().attribute("k1","");
+                            QString k2 = node.toElement().attribute("k2","");
+                            QString k3 = node.toElement().attribute("k3","");
+                            socket->setCryptInfo(k1, k2, k3);
+                            //socket->switchCrypted(true);
+                            //socket->write("<cipher type='ok'/>");
+                            //emit connected();
+                            //QByteArray loginString("<iq type=\"set\" id=\""+sessionId.toAscii()+"\"><query xmlns=\"jabber:iq:auth\"><username>"+username.toAscii()+"</username><digest>"+tlenHash(password, sessionId)+"</digest><resource>t</resource><host>tlen.pl</host></query></iq>");
+                            //socket->write(loginString);
+                        }
+
 		}
+                else if (node.nodeName() == "cipher")
+                {
+                            socket->switchCrypted(true);
+                            socket->write("<cipher type='ok'/>");
+                            emit connected();
+                            QByteArray loginString("<iq type=\"set\" id=\""+sessionId.toAscii()+"\"><query xmlns=\"jabber:iq:auth\"><username>"+username.toAscii()+"</username><digest>"+tlenHash(password, sessionId)+"</digest><resource>QTlen4</resource><host>tlen.pl</host></query></iq>");
+                            socket->write(loginString);
+                }
                 //tu pobieramy token do odczytywania avatarów
                 else if (node.nodeName() == "avatar")
                 {
@@ -143,10 +178,32 @@ void QTlen::parseResponse(QByteArray input)
 		{
 			QDateTime datetime = QDateTime::currentDateTime();
 			QString sender = node.toElement().attribute("from", "");
-			emit typingStopped(sender);
-			//QDomNode n = node.toElement().firstChild();
-			QString msg = decode(node.toElement().namedItem("body").toElement().text());
-			if (!node.toElement().namedItem("x").isNull())
+                        emit typingStopped(sender);
+                        QString type = node.toElement().attribute("type", "");
+                        if (type == "pic")
+                        {
+                            QString idt = node.toElement().attribute("idt", "").toAscii();
+                            QString crc = node.toElement().attribute("crc", "");
+                            QString rt = node.toElement().attribute("rt", "");
+                            if ((crc != "") && (rt == "") && (crc != "n"))
+                            {
+                                socket->write("<message type='pic' crc_c='n' idt='"+idt.toAscii()+"' to='"+sender.toAscii()+"' />");
+                            }
+                            else if ((crc == "") && (rt != ""))
+                            {
+                                emit imageReadyToDownload(rt, idt, sender);
+                            }
+                            else if (crc == "n")
+                            {
+                                emit sendImage(idt, sender);
+                            }
+                        }
+                        else
+                        //begin wiadomość tekstowa
+                        {
+                            //QDomNode n = node.toElement().firstChild();
+                            QString msg = decode(node.toElement().namedItem("body").toElement().text());
+                            if (!node.toElement().namedItem("x").isNull())
 				{
 					if (node.toElement().namedItem("x").toElement().attribute("xmlns", "") == "jabber:x:delay")
 						{
@@ -163,8 +220,10 @@ void QTlen::parseResponse(QByteArray input)
 							datetime.setTime( QTime( hour, min, sec ) );
 						}
 				}
-			if (sender != "b73@tlen.pl") //nie potrzebujemy spamu
+                            if (sender != "b73@tlen.pl") //nie potrzebujemy spamu
 				emit message(sender, msg, datetime);
+                        }
+                        //end wiadomość tekstowa
 		}
 		//romanse z serwerem
 		else if (node.nodeName() == "iq")
@@ -356,6 +415,13 @@ void QTlen::parseResponse(QByteArray input)
 				emit presenceFrom(user, type, desc, avatar_type, avatar_digest);
 			}
 		}
+                else if (node.nodeName() == "n")
+                {
+                    QString sender = decode(node.toElement().attribute("f", ""));
+                    QString subject = decode(node.toElement().attribute("s", ""));
+                    QString id = node.toElement().attribute("id", "");
+                    QString fld = node.toElement().attribute("fld", "");
+                }
 		node=node.nextSibling();
 	}
 }
@@ -530,8 +596,7 @@ QByteArray QTlen::tlenHash(QString pass, QString sid)
 
 void QTlen::pinguj()
 {
-	socket->write("  \t  ");
-	QTimer::singleShot(55000, this, SLOT(pinguj()));
+        socket->write("  \t  ");
 };
 
 void QTlen::sendMessage(QString address, QString body)

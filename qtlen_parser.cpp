@@ -2,10 +2,314 @@
 
 /*QTlenParser::QTlenParser(): QObject()
 {
+}*/
+/*QTlenParser::parse(QByteArray input)
+{
+        //debug, żeby sobie poczytać, o czym gada z nami serwer
+        emit receivedXml(input);
+        //profilaktycznie puszczamy pinga
+        socket->write("  \t  ");
+        QDomDocument doc("");
+        //brzydka sztuczka, konieczna do poradzenia sobie z nawałem śmiecia w jednym pakiecie
+        doc.setContent("<package>"+input+"</package>");
+        QDomElement root = doc.documentElement();
+        QDomNode node = root.firstChild();
+        while (!node.isNull())
+        {
+                if (node.nodeName() == "s")
+                {
+                }
+                //tu pobieramy token do odczytywania avatarów
+                else if (node.nodeName() == "avatar")
+                {
+                }
+                //ktoś pisze lub cyka dzwonkiem (jak śmie!!))
+                else if (node.nodeName() == "m")
+                {
+                }
+                //SPAAAAM!
+                else if (node.nodeName() == "message")
+                {
+                }
+                //romanse z serwerem
+                else if (node.nodeName() == "iq")
+                {
+                }
+                //ktoś wylazł z nory
+                else if (node.nodeName() == "presence")
+                {
+                }
+                node=node.nextSibling();
+        }
 }
 
+                if (node.nodeName() == "s")
+                {
+                        sessionId=node.toElement().attribute("i","");
+                        emit connected();
+                        QByteArray loginString("<iq type=\"set\" id=\""+sessionId.toAscii()+"\"><query xmlns=\"jabber:iq:auth\"><username>"+username.toAscii()+"</username><digest>"+tlenHash(password, sessionId)+"</digest><resource>QTlen4</resource><host>tlen.pl</host></query></iq>");
+                        socket->write(loginString);
+                }
+                //tu pobieramy token do odczytywania avatarów
+                else if (node.nodeName() == "avatar")
+                {
+                        token = node.toElement().namedItem("token").toElement().text();
+                        emit receivedToken(token);
+                }
+                //ktoś pisze lub cyka dzwonkiem (jak śmie!!))
+                else if (node.nodeName() == "m")
+                {
+                    if (node.toElement().hasAttribute("tp") and (node.toElement().attribute("tp", "") != "p"))
+                    {
+                        if (node.toElement().attribute("tp", "") == "t")
+                                emit typingStarted(node.toElement().attribute("f", ""));
+                        else if (node.toElement().attribute("tp", "") == "u")
+                                emit typingStopped(node.toElement().attribute("f", ""));
+                        else if (node.toElement().attribute("tp", "") == "a")
+                                emit soundAlert(node.toElement().attribute("f", ""));
+                    }
+                    // jak nie powiadomienia, to czaty
 
+        <m f='261@c/~Pretorius'><b n='6' f='0' c='000000' s='10'>witaj+:D</b></m>
 
+        n - font style (?)
+        f - font family
+        c - font color
+        s - font size
+        <b>msg body</b>
+
+        if <m> contains tp='p', it's a private message
+
+                    else
+                    {
+                        QString from = node.toElement().attribute("f");
+                        QDomElement e_body = node.toElement().namedItem("b").toElement();
+                        QString color = e_body.attribute("c").prepend("#");
+                        int size = e_body.attribute("s").toInt();
+                        QString body = e_body.text();
+                    }
+                }
+                //SPAAAAM!
+                else if (node.nodeName() == "message")
+                {
+                        QDateTime datetime = QDateTime::currentDateTime();
+                        QString sender = node.toElement().attribute("from", "");
+                        emit typingStopped(sender);
+                        //QDomNode n = node.toElement().firstChild();
+                        QString msg = decode(node.toElement().namedItem("body").toElement().text());
+                        if (!node.toElement().namedItem("x").isNull())
+                                {
+                                        if (node.toElement().namedItem("x").toElement().attribute("xmlns", "") == "jabber:x:delay")
+                                                {
+                                                        //obliczamy stampa
+                                                        //stamp='20090125T19:48:40'
+                                                        QString stamp = node.toElement().namedItem("x").toElement().attribute("stamp", "");
+                                                        int year = stamp.mid( 0, 4 ).toInt();
+                                                        int month = stamp.mid( 4, 2 ).toInt();
+                                                        int day = stamp.mid( 6, 2 ).toInt();
+                                                        int hour = stamp.mid( 9, 2 ).toInt();
+                                                        int min = stamp.mid( 12, 2 ).toInt();
+                                                        int sec = stamp.mid( 15, 2 ).toInt();
+                                                        datetime.setDate( QDate( year, month, day ) );
+                                                        datetime.setTime( QTime( hour, min, sec ) );
+                                                }
+                                }
+                        if (sender != "b73@tlen.pl") //nie potrzebujemy spamu
+                                emit message(sender, msg, datetime);
+                }
+                //romanse z serwerem
+                else if (node.nodeName() == "iq")
+                {
+                        //może to z telewizji? nie, jednak z czata
+                        if (node.toElement().attribute("from") == "c")
+                        {
+                        }
+                        //jak nie z czata, to i tak się przyjrzymy
+                        else
+                        {
+                                if (node.toElement().attribute("id", "") == "GetRoster")
+                                {
+                                        emit rosterInfoBegin();
+                                        QDomElement e = node.toElement();
+                                        QDomNode n = e.firstChild().toElement().firstChild();
+                                        QString group("");
+                                        while (!n.isNull())
+                                        {
+                                                if (n.isElement())
+                                                {
+                                                        QDomElement ee = n.toElement();
+                                                        if (ee.tagName() == "item")
+                                                        {
+                                                                if(!ee.namedItem("group").isNull())
+                                                                        group = decode(ee.namedItem("group").toElement().text());
+                                                                else
+                                                                        group = "";
+                                                                emit rosterItem(ee.attribute("jid", ""), group, decode(ee.attribute("name", "")), ee.attribute("subscription"));
+                                                                if (ee.attribute("subscription") == "from" and !ee.hasAttribute("ask"))
+                                                                        emit autorizationRequest(ee.attribute("jid", ""));
+                                                        }
+                                                }
+                                                n = n.nextSibling();
+                                        }
+                                        emit rosterInfoEnd();
+                                }
+                                else if (node.toElement().attribute("type", "") == "result")
+                                {
+                                        if (node.toElement().attribute("id", "") == sessionId) //type = error to błąd logowania
+                                        {
+                                            if (node.toElement().attribute("from", "") == "tcfg")
+                                            {
+                                                    parseMailConfig(node.toElement().firstChild().toElement().firstChild());
+                                            }
+                                            else
+                                            {
+                                                isConnected = true;
+                                                emit authenticated();
+                                            }
+                                        }
+                                        else if (node.toElement().attribute("id", "") == "src3@abcd")
+                                        {
+                                                QDomNode n = node.toElement().namedItem("query").toElement().firstChild();
+                                                if(!n.isNull())
+                                                {
+                                                        QDomElement e = n.toElement();
+                                                        QTlenUserInfo info;
+                                                        info.jid	= e.attribute("jid");
+                                                        info.first	= decode(e.namedItem("first").toElement().text());
+                                                        info.last	= decode(e.namedItem("last").toElement().text());
+                                                        info.nick	= decode(e.namedItem("nick").toElement().text());
+                                                        info.email	= decode(e.namedItem("email").toElement().text());
+                                                        info.city	= decode(e.namedItem("c").toElement().text());
+                                                        info.school	= decode(e.namedItem("e").toElement().text());
+                                                        info.job	= e.namedItem("j").toElement().text().toInt();
+                                                        info.lookingFor	= e.namedItem("r").toElement().text().toInt();
+                                                        info.sex	= e.namedItem("s").toElement().text().toInt();
+                                                        info.year	= e.namedItem("b").toElement().text().toInt();
+                                                        emit vcardArrived(info);
+                                                }
+                                        }
+                                        else if (node.toElement().attribute("id", "") == "src")
+                                        {
+                                                QDomNode n = node.toElement().namedItem("query").toElement().firstChild();
+                                                emit searchResultBegin(!n.isNull());
+                                                while(!n.isNull())
+                                                {
+                                                        QDomElement e = n.toElement();
+                                                        QTlenUserInfo info;
+                                                        info.jid	= e.attribute("jid") + QString("@tlen.pl");
+                                                        info.first	= decode(e.namedItem("first").toElement().text());
+                                                        info.last	= decode(e.namedItem("last").toElement().text());
+                                                        info.nick	= decode(e.namedItem("nick").toElement().text());
+                                                        info.email	= decode(e.namedItem("email").toElement().text());
+                                                        info.city	= decode(e.namedItem("c").toElement().text());
+                                                        info.school	= decode(e.namedItem("e").toElement().text());
+                                                        info.job	= e.namedItem("j").toElement().text().toInt();
+                                                        info.lookingFor	= e.namedItem("r").toElement().text().toInt();
+                                                        info.sex	= e.namedItem("s").toElement().text().toInt();
+                                                        info.year	= e.namedItem("b").toElement().text().toInt();
+                                                        info.presence	= e.namedItem("a").toElement().text().toInt();
+                                                        info.visible	= (bool)e.namedItem("v").toElement().text().toInt();
+                                                        emit searchItem(info);
+                                                        n = n.nextSibling();
+                                                }
+                                        }
+                                        else if (node.toElement().attribute("id", "") == "tr")
+                                        {
+                                                QDomNode n = node.toElement().namedItem("query").toElement().firstChild();
+                                                if(!n.isNull())
+                                                {
+                                                        QDomElement e = n.toElement();
+                                                        QTlenUserInfo info;
+                                                        info.jid	= username + QString("@tlen.pl");
+                                                        info.first	= decode(e.namedItem("first").toElement().text());
+                                                        info.last	= decode(e.namedItem("last").toElement().text());
+                                                        info.nick	= decode(e.namedItem("nick").toElement().text());
+                                                        info.email	= decode(e.namedItem("email").toElement().text());
+                                                        info.city	= decode(e.namedItem("c").toElement().text());
+                                                        info.school	= decode(e.namedItem("e").toElement().text());
+                                                        info.job	= e.namedItem("j").toElement().text().toInt();
+                                                        info.lookingFor	= e.namedItem("r").toElement().text().toInt();
+                                                        info.sex	= e.namedItem("s").toElement().text().toInt();
+                                                        info.year	= e.namedItem("b").toElement().text().toInt();
+                                                        info.visible	= (bool)e.namedItem("v").toElement().text().toInt();
+                                                        emit myInfoArrived(info);
+                                                }
+                                        }
+                                }
+                                else if (node.toElement().attribute("type") == "set")
+                                {
+                                        //pewnie jakaś aktualizacja rostera
+                                        //na pewno znajdziemy tam tag <query>
+                                        QDomNode e = node.toElement().namedItem("query").toElement().firstChild();
+                                        while(!e.isNull())
+                                        {
+                                                QString group("");
+                                                QString jid = e.toElement().attribute("jid");
+                                                QString name = decode(e.toElement().attribute("name"));
+                                                QString subs = e.toElement().attribute("subscription");
+                                                if(!e.toElement().namedItem("group").isNull())
+                                                        group = decode(e.toElement().namedItem("group").toElement().text());
+                                                emit rosterItem(jid, group, name, subs);
+                                                e = e.nextSibling();
+                                        }
+                                }
+                                else if (node.toElement().attribute("type") == "error" and node.toElement().attribute("id", "") == sessionId)
+                                        emit authorizationError();
+                        }
+                }
+                //ktoś wylazł z nory
+                else if (node.nodeName() == "presence")
+                {
+                        QString user = node.toElement().attribute("from", "");
+                        if(node.toElement().hasAttribute("type") and node.toElement().attribute("type", "") == "subscribe" and !node.toElement().hasAttribute("ask"))
+                        {
+                                emit autorizationRequest(user);
+                        }
+                        else
+                        {
+                                QString desc("");
+                                QString avatar_type("-1");
+                                QString avatar_digest("");
+                                QTlenPresence type = Offline;
+                                if(!node.toElement().namedItem("status").isNull())
+                                {
+                                        desc = decode(node.toElement().namedItem("status").toElement().text());
+                                }
+                                //Pobieramy typ avatara
+                                if(!node.toElement().namedItem("avatar").isNull())
+                                {
+                                        avatar_type=node.toElement().namedItem("avatar")
+                                                    .toElement().namedItem("a")
+                                                    .toElement().attribute("type", "-1");
+                                        avatar_digest=node.toElement().namedItem("avatar")
+                                                    .toElement().namedItem("a")
+                                                    .toElement().attribute("md5", "");
+                                }
+                                if(node.toElement().hasAttribute("type"))
+                                {
+                                        if (node.toElement().attribute("type", "") == "unavailable")
+                                                type = Offline;
+                                }
+                                else
+                                {
+                                        QString plainType = node.toElement().firstChild().toElement().text();
+                                        if (plainType == "available")
+                                                type = Online;
+                                        else if (plainType == "chat")
+                                                type = Chatty;
+                                        else if (plainType == "away")
+                                                type = Away;
+                                        else if (plainType == "xa")
+                                                type = XA;
+                                        else if (plainType == "dnd")
+                                                type = DND;
+                                }
+                                emit presenceFrom(user, type, desc, avatar_type, avatar_digest);
+                        }
+                }
+                node=node.nextSibling();
+        }
+/*
 bool QTlenParser::readInput(QByteArray input)
 {
 	qDebug("Called QTlenParser::readInput()\n");

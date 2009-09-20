@@ -191,7 +191,9 @@ void QTlenRosterManager::showRoster()
 				addedGroups.append(g);
 			}
 			QPixmap tmpAvatar = QPixmap(rosterItems[n].avatar);
-			tmpAvatar.setAlphaChannel(avMask);
+                        if(!tmpAvatar.isNull())
+                            tmpAvatar.setAlphaChannel(avMask);
+
 			i.item = rosterBox->addRosterItem(rosterItems[n].name,
 							  rosterItems[n].presence,
 							  rosterItems[n].desc,
