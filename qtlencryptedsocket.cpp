@@ -173,7 +173,7 @@ unsigned char * QTlenCryptedSocket::random(int size)
         char * byte;
         int i;
         std::ifstream is;
-        is.open("/dev/urandom", std::ios::binary);
+        is.open("/dev/random", std::ios::binary);
         buffer = new char [size];
         byte = new char [1];
         i = 0;

@@ -6,13 +6,14 @@ TARGET =
 DEPENDPATH += . \
     widgets
 INCLUDEPATH += . \
-    widgets
+    widgets \
+    /usr/include/QtCrypto
 QT += xml \
     network \
     sql \
-    dbus \
-    crypto
-
+    dbus
+LIBS += ssl \
+    qca
 # Input
 HEADERS += chat_manager.h \
     debug.h \
