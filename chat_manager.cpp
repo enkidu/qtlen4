@@ -1,10 +1,11 @@
 #include "chat_manager.h"
-
+#include <QIcon>
 QTlenChatManager::QTlenChatManager(QTlenRosterManager * roster, QTlenHistoryManager * history)
 {
 	this->roster = roster;
         this->history = history;
         container = new QTlenChatContainer(0,0);
+        useHistory = true;
 }
 
 int QTlenChatManager::findIndexOf(QString jid)
@@ -18,34 +19,71 @@ int QTlenChatManager::findIndexOf(QString jid)
 QTlenChatWidget* QTlenChatManager::createWindow(QString jid)
 {
             container->show();
+        if (!container->isActiveWindow())
+        {
             container->startBlinking();
+            container->raise();
+        }
 	ChatItem i;
-	i.jid = jid;
+        i.jid = jid;
+        RosterItem item = roster->getRosterItem(jid);
         QTlenChatWidget *widget = container->addChat();
-        container->setTabText(widget, roster->getNameOf(jid));
-	widget->setContactInfo(jid, roster->getNameOf(jid));
+        container->setTabText(widget, item.name);
+        widget->setContactInfo(jid, item.name);
 	widget->setMyInfo(myNick);
         //widget->show();
-	widget->showPreviousMessages(history->getLastMessages(jid, 10));
+
 	i.widget=widget;
 	chats.append(i);
-	connect(widget,
-		SIGNAL(widgetClosed(QString)),
-		this,
-		SLOT(detachWidget(QString)));
-	connect(widget,
-		SIGNAL(message(QString, QString)),
-		this,
-		SLOT(messageProxy(QString, QString)));
-	connect(widget,
-		SIGNAL(typing(QString,bool)),
-		this,
-		SIGNAL(sendTyping(QString,bool)));
+        if (useHistory)
+            emit fetchLastMessages(jid, 10);
+        QIcon icon;
+        switch (item.presence)
+        {
+            case Online:
+                icon.addPixmap(QPixmap(QString::fromUtf8(":/icons/icons/16x16/online.png")));
+                break;
+            case Chatty:
+                icon.addPixmap(QPixmap(QString::fromUtf8(":/icons/icons/16x16/chatty.png")));
+                break;
+            case Away:
+                icon.addPixmap(QPixmap(QString::fromUtf8(":/icons/icons/16x16/away.png")));
+                break;
+            case XA:
+                icon.addPixmap(QPixmap(QString::fromUtf8(":/icons/icons/16x16/xa.png")));
+                break;
+            case DND:
+                icon.addPixmap(QPixmap(QString::fromUtf8(":/icons/icons/16x16/dnd.png")));
+                break;
+            case Offline:
+                icon.addPixmap(QPixmap(QString::fromUtf8(":/icons/icons/16x16/offline.png")));
+                break;
+        }
+        int index = findIndexOf(jid);
+        container->tabbar->setTabIcon(index, icon);
+        if (chats.count() == 1)
+        {
+            container->setWindowIcon(icon);
+            container->icon = icon;
+        }
+
+        connect(widget,
+                SIGNAL(widgetClosed(QString)),
+                this,
+                SLOT(detachWidget(QString)));
+        connect(widget,
+                SIGNAL(message(QString, QString)),
+                this,
+                SLOT(messageProxy(QString, QString)));
+        connect(widget,
+                SIGNAL(typing(QString,bool)),
+                this,
+                SIGNAL(sendTyping(QString,bool)));
         connect(widget,
                 SIGNAL(infoRequest(QString)),
                 this,
                 SIGNAL(infoRequest(QString)));
-	return widget;
+        return widget;
 }
 
 void QTlenChatManager::showMessage(QString jid, QString body, QDateTime stamp)
@@ -59,15 +97,23 @@ void QTlenChatManager::showMessage(QString jid, QString body, QDateTime stamp)
                     container->setTabColour(chats[index].widget, QColor::QColor("#f00"));
                 }
                 if (!container->isActiveWindow())
+		{
+                    container->increasePendingMessages();
                     container->startBlinking();
-		history->saveMessage(jid, myJid, body, stamp);
+                    container->raise();
+
+		}
+                if (useHistory)
+                    emit saveMessage(jid, myJid, body, stamp);
 	}
 	else
 	{
 		sysIcon->showMessage(tr("New chat with ") + roster->getNameOf(jid), body);
                 QTlenChatWidget *widget = createWindow(jid);
-		history->saveMessage(jid, myJid, body,  stamp);
+                if (useHistory)
+                    emit saveMessage(jid, myJid, body,  stamp);
 		widget->showMessage(body, stamp);
+                container->increasePendingMessages();
                 container->startBlinking();
 		widget->setTyping(false);
 	}
@@ -75,7 +121,6 @@ void QTlenChatManager::showMessage(QString jid, QString body, QDateTime stamp)
 
 void QTlenChatManager::detachWidget(const QString jid)
 {
-    qDebug("called QTlenChatManager::detachWidget");
     int index = findIndexOf(jid);
 	if (index != -1)
 	{
@@ -120,8 +165,9 @@ void QTlenChatManager::setMyInfo(QString nick, QString jid)
 
 void QTlenChatManager::messageProxy(QString jid, QString body)
 {
-	emit sendMessage(jid, body);
-	history->saveMessage(myJid, jid, body, QDateTime::currentDateTime());
+    emit sendMessage(jid, body);
+    if (useHistory)
+        emit saveMessage(myJid, jid, body, QDateTime::currentDateTime());
 }
 
 QTlenImageFetcher::QTlenImageFetcher()
@@ -137,7 +183,6 @@ void QTlenImageFetcher::getImage(QString rt, QString idt, QString sender, QStrin
     this->first = true;
     http = new QTcpSocket();
         QString request = "<pic auth='"+jid+"' t='g' from='"+sender+"' pid='1001' rt='"+rt+"' idt='"+idt+"'/>";
-        qDebug("GET " +request.toAscii());
         http->connectToHost("ps.tlen.pl", 443);
         http->write(request.toAscii());
         connect(http, SIGNAL(readyRead()), this, SLOT(getPart()));
@@ -175,6 +220,53 @@ void QTlenChatManager::gotImage(QString from, QPixmap image)
         }
 }
 
+void QTlenChatManager::lastMessages(QString r_jid, const QList<QTlenMessageStruct> &list)
+{
+    int index = findIndexOf(r_jid);
+    if (index != -1)
+    {
+        chats[index].widget->showPreviousMessages(list);
+    }
+}
+
+void QTlenChatManager::enableHistory(bool ok)
+{
+    this->useHistory = ok;
+}
+
+void QTlenChatManager::presenceFrom(QString jid, QTlenPresence type, QString, QString, QString)
+{
+    int index = findIndexOf(jid);
+    if (index != -1)
+    {
+        QIcon icon;
+        switch (type)
+        {
+            case Online:
+                icon.addPixmap(QPixmap(QString::fromUtf8(":/icons/icons/16x16/online.png")));
+                break;
+            case Chatty:
+                icon.addPixmap(QPixmap(QString::fromUtf8(":/icons/icons/16x16/chatty.png")));
+                break;
+            case Away:
+                icon.addPixmap(QPixmap(QString::fromUtf8(":/icons/icons/16x16/away.png")));
+                break;
+            case XA:
+                icon.addPixmap(QPixmap(QString::fromUtf8(":/icons/icons/16x16/xa.png")));
+                break;
+            case DND:
+                icon.addPixmap(QPixmap(QString::fromUtf8(":/icons/icons/16x16/dnd.png")));
+                break;
+            case Offline:
+                icon.addPixmap(QPixmap(QString::fromUtf8(":/icons/icons/16x16/offline.png")));
+                break;
+        }
+        container->tabbar->setTabIcon(index, icon);
+        if (index == container->tabbar->currentIndex())
+            container->setWindowIcon(icon);
+    }
+}
+
 void QTlenImageFetcher::getPart()
 {
         QByteArray data = http->readAll();
@@ -195,11 +287,6 @@ void QTlenImageFetcher::getPart()
             if (raw.loadFromData(cache))
             {
                 emit gotImage(sender, raw);
-            }
-            else
-            {
-                qDebug("Wrong pixmap");
-                qDebug(data);
             }
         }
 }

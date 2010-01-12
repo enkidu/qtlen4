@@ -11,9 +11,11 @@ INCLUDEPATH += . \
 QT += xml \
     network \
     sql \
-    dbus
-LIBS += ssl \
-    qca
+    dbus \
+    webkit
+LIBS += -lssl \
+    -lqca
+
 # Input
 HEADERS += chat_manager.h \
     debug.h \
@@ -42,7 +44,10 @@ HEADERS += chat_manager.h \
     qtlencryptedsocket.h \
     widgets/qtlenchatcontainer.hpp \
     widgets/qtlenrosteritem.hpp \
-    widgets/qtlenrosteritemdelegate.hpp
+    widgets/qtlenrosteritemdelegate.hpp \
+    chatroomnode.h \
+    qtlenpublicchatwidget.h \
+    textdocument.hpp
 FORMS += config.ui \
     debug.ui \
     info_edit.ui \
@@ -74,6 +79,8 @@ SOURCES += chat_manager.cpp \
     qtlencryptedsocket.cpp \
     widgets/qtlenchatcontainer.cpp \
     widgets/qtlenrosteritem.cpp \
-    widgets/qtlenrosteritemdelegate.cpp
+    widgets/qtlenrosteritemdelegate.cpp \
+    qtlenpublicchatwidget.cpp \
+    textdocument.cpp
 RESOURCES += icons.qrc
 TRANSLATIONS = qtlen4_pl.ts

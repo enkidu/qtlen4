@@ -7,7 +7,7 @@ QTlenRosterBox::QTlenRosterBox(QWidget * parent):QTreeWidget(parent)
 	settings = new QSettings(QDir::homePath() + "/.qtlen4/config", QSettings::IniFormat);
 	offlinesVisible = settings->value("/roster/offlines_visible", false).toBool();
         setSortingEnabled(false);
-        setAnimated(1);
+        setAnimated(0);
         this->setItemDelegate(new QTlenRosterItemDelegate(this));
 }
 

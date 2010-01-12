@@ -2,22 +2,67 @@
 
 QTlenAvatarsManager::QTlenAvatarsManager()
 {
+    db= QSqlDatabase::addDatabase("QSQLITE", "avatars");
+    db.setDatabaseName(QDir::homePath().append("/.qtlen4/avatars.sq3"));
+    db.open();
+    if (db.tables().isEmpty())
+    {
+        QSqlQuery query(db);
+        query.exec("CREATE TABLE avatars (id INTEGER PRIMARY KEY, jid, digest, pixmap)");
+    }
     path = QDir::homePath().append("/.qtlen4/avatars/");
     dir = QDir();
 }
 
 QPixmap QTlenAvatarsManager::getAvatar(QString nick, QString digest)
 {
-    QString fileName = QString("%1/%2.png").arg(nick, digest);
-    return QPixmap::QPixmap (path + fileName);
+    QSqlQuery query(db);
+    query.prepare("SELECT pixmap FROM avatars WHERE (jid = :jid) AND (digest = :digest)");
+    query.bindValue(":jid", nick);
+    query.bindValue(":digest", digest);
+    query.setForwardOnly(true);
+    query.exec();
+    if (query.next())
+    {
+        qDebug("fetching av from db");
+        QByteArray ba = query.value(0).toByteArray();
+        QPixmap pix;
+        pix.loadFromData(ba);
+        return pix;
+    }
+    return QPixmap::QPixmap();
 }
 
 void QTlenAvatarsManager::saveAvatar(QString nick, QString digest, QPixmap avatar)
 {
-    QString fileName = QString("%1/%2.png").arg(nick, digest);
-    if(!dir.exists(path + nick))
-	dir.mkpath(path + nick);
-    avatar.save(path + fileName);
+    QByteArray ba;
+    QBuffer buf(&ba);
+    buf.open(QIODevice::WriteOnly);
+    avatar.save(&buf, "PNG");
+    QSqlQuery query(db);
+    query.prepare("SELECT id FROM avatars WHERE (jid = :jid) AND (digest = :digest)");
+    query.bindValue(":jid", nick);
+    query.bindValue(":digest", digest);
+    query.exec();
+    if (query.next())
+    {
+        int id = query.value(0).toInt();
+        QSqlQuery update(db);
+        update.prepare("UPDATE avatars pixmap = :pixmap WHERE id = :id");
+        update.bindValue(":id", id);
+        update.bindValue(":pixmap", ba);
+        update.exec();
+    }
+    else
+    {
+        QSqlQuery insert(db);
+        insert.prepare("INSERT INTO avatars(jid, digest, pixmap)"
+                       "VALUES(:jid, :digest, :pixmap)");
+        insert.bindValue(":jid", nick);
+        insert.bindValue(":digest", digest);
+        insert.bindValue(":pixmap", ba);
+        insert.exec();
+    }
 }
 
 QTlenAvatarsFetcher::QTlenAvatarsFetcher()
@@ -39,11 +84,11 @@ QPixmap QTlenAvatarsFetcher::getAvatar(QTlenAvatarsManager* manager,
 	return pixmap;
     else
     {
+        qDebug("fetching from server");
 	QString request = "/" + config.avatarGetUrl
 			  .replace("^login^", nick)
 			  .replace("^token^", token)
 			  .replace("^type^", "0");
-	qDebug("GET " +request.toAscii());
 	QUrl url = QUrl(config.baseUrl);
 	connect(http, SIGNAL(done(bool)), this, SLOT(setFinished(bool)));
 	http->setHost(url.host());
@@ -55,26 +100,18 @@ QPixmap QTlenAvatarsFetcher::getAvatar(QTlenAvatarsManager* manager,
 
 void QTlenAvatarsFetcher::setFinished(bool error)
 {
-    qDebug("Request Finished");
+    qDebug("finished");
     if(!error)
     {
-	qDebug("OK");
 	QPixmap raw = QPixmap();
 	QByteArray data = http->readAll();
 	if (raw.loadFromData(data))
 	{
+            qDebug("got avatar");
 	    emit gotAvatar(nick + "@tlen.pl", raw);
 	    manager->saveAvatar(nick, digest, raw);
-	    qDebug("Pixmap saved");
-	}
-	else
-	{
-	    qDebug("Wrong pixmap");
-	    qDebug(data);
 	}
     }
-    else
-	qDebug(http->errorString().toAscii());
 }
 
 void QTlenAvatarSaver::saveAvatar(QTlenMailConfig config, QByteArray data, QString token, int access)

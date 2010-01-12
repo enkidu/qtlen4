@@ -18,7 +18,6 @@ QTlen::QTlen():QObject()
 		SIGNAL(readyToGetRoster()),
 		SLOT(getRoster()));
 	connect(this,	SIGNAL(parse(QByteArray)),			this,	SLOT(parseResponse(QByteArray)));
-	connect(socket,	SIGNAL(error(QAbstractSocket::SocketError)), 	this,	SLOT(displayError(QAbstractSocket::SocketError)));
 	connect(this,	SIGNAL(startConnection()),			this,	SLOT(makeConnection()));
 
         connect(pingTimer,
@@ -70,7 +69,6 @@ void QTlen::openConnection()
 void QTlen::checkResponse()
 {
         QByteArray tmp = socket->readAll();
-        //qDebug(tmp);
         cache.append(tmp);
         QDomDocument doc("");
         if(doc.setContent("<package>"+cache+"</package>") or cache.startsWith("<s") or cache.startsWith("<cipher"))
@@ -91,339 +89,410 @@ void QTlen::writeLoginString()
 
 void QTlen::parseResponse(QByteArray input)
 {
-	//debug, żeby sobie poczytać, o czym gada z nami serwer
-	emit receivedXml(input);
+    //debug, żeby sobie poczytać, o czym gada z nami serwer
+    emit receivedXml(input);
+    //profilaktycznie puszczamy pinga
+    //socket->write("  \t  ");
+    QDomDocument doc("");
+    //brzydka sztuczka, konieczna do poradzenia sobie z nawałem śmiecia w jednym pakiecie
+    doc.setContent("<package>"+input+"</package>");
+    QDomElement root = doc.documentElement();
+    QDomNode node = root.firstChild();
+    while (!node.isNull())
+    {
+        if (node.nodeName() == "s")
+            parse_s(node);
+        else if (node.nodeName() == "cipher")
+            parse_cipher(node);
+        //tu pobieramy token do odczytywania avatarów
+        else if (node.nodeName() == "avatar")
+            parse_avatar(node);
+        //ktoś pisze lub cyka dzwonkiem (jak śmie!!))
+        else if (node.nodeName() == "m")
+            parse_m(node);
+        //SPAAAAM!
+        else if (node.nodeName() == "message")
+            parse_message(node);
+        //romanse z serwerem
+        else if (node.nodeName() == "iq")
+            parse_iq(node);
+        //ktoś wylazł z nory
+        else if (node.nodeName() == "presence")
+            parse_presence(node);
+        else if (node.nodeName() == "p")
+            parse_p(node);
+        else if (node.nodeName() == "n")
+            parse_n(node);
+        node=node.nextSibling();
+    }
+}
 
-	//profilaktycznie puszczamy pinga
-        //socket->write("  \t  ");
-	QDomDocument doc("");
-	//brzydka sztuczka, konieczna do poradzenia sobie z nawałem śmiecia w jednym pakiecie
-	doc.setContent("<package>"+input+"</package>");
-	QDomElement root = doc.documentElement();
-	QDomNode node = root.firstChild();
-	while (!node.isNull())
-	{
-		if (node.nodeName() == "s") 
-		{
-			sessionId=node.toElement().attribute("i","");
-                        if (node.toElement().attribute("k1","") == "")
-                        {
-                            emit connected();
-                            QByteArray loginString("<iq type=\"set\" id=\""+sessionId.toAscii()+"\"><query xmlns=\"jabber:iq:auth\"><username>"+username.toAscii()+"</username><digest>"+tlenHash(password, sessionId)+"</digest><resource>QTlen4</resource><host>tlen.pl</host></query></iq>");
-                            socket->write(loginString);
-                        }
-                        else
-                        {
-                            QString k1 = node.toElement().attribute("k1","");
-                            QString k2 = node.toElement().attribute("k2","");
-                            QString k3 = node.toElement().attribute("k3","");
-                            socket->setCryptInfo(k1, k2, k3);
-                            //socket->switchCrypted(true);
-                            //socket->write("<cipher type='ok'/>");
-                            //emit connected();
-                            //QByteArray loginString("<iq type=\"set\" id=\""+sessionId.toAscii()+"\"><query xmlns=\"jabber:iq:auth\"><username>"+username.toAscii()+"</username><digest>"+tlenHash(password, sessionId)+"</digest><resource>t</resource><host>tlen.pl</host></query></iq>");
-                            //socket->write(loginString);
-                        }
+void QTlen::parse_s(QDomNode node)
+{
+    sessionId=node.toElement().attribute("i","");
+    if (node.toElement().attribute("k1","") == "")
+    {
+        emit connected();
+        QByteArray loginString("<iq type=\"set\" id=\""+sessionId.toAscii()+"\"><query xmlns=\"jabber:iq:auth\"><username>"+username.toAscii()+"</username><digest>"+tlenHash(password, sessionId)+"</digest><resource>QTlen4</resource><host>tlen.pl</host></query></iq>");
+        socket->write(loginString);
+    }
+    else
+    {
+        QString k1 = node.toElement().attribute("k1","");
+        QString k2 = node.toElement().attribute("k2","");
+        QString k3 = node.toElement().attribute("k3","");
+        socket->setCryptInfo(k1, k2, k3);
+    }
+}
 
-		}
-                else if (node.nodeName() == "cipher")
-                {
-                            socket->switchCrypted(true);
-                            socket->write("<cipher type='ok'/>");
-                            emit connected();
-                            QByteArray loginString("<iq type=\"set\" id=\""+sessionId.toAscii()+"\"><query xmlns=\"jabber:iq:auth\"><username>"+username.toAscii()+"</username><digest>"+tlenHash(password, sessionId)+"</digest><resource>QTlen4</resource><host>tlen.pl</host></query></iq>");
-                            socket->write(loginString);
-                }
-                //tu pobieramy token do odczytywania avatarów
-                else if (node.nodeName() == "avatar")
-                {
-                        token = node.toElement().namedItem("token").toElement().text();
-			emit receivedToken(token);
-                }
-		//ktoś pisze lub cyka dzwonkiem (jak śmie!!))
-		else if (node.nodeName() == "m")
-		{
-		    if (node.toElement().hasAttribute("tp") and (node.toElement().attribute("tp", "") != "p"))
-		    {
-			if (node.toElement().attribute("tp", "") == "t")
-				emit typingStarted(node.toElement().attribute("f", ""));
-			else if (node.toElement().attribute("tp", "") == "u")
-				emit typingStopped(node.toElement().attribute("f", ""));
-			else if (node.toElement().attribute("tp", "") == "a")
-				emit soundAlert(node.toElement().attribute("f", ""));
-		    }
-		    // jak nie powiadomienia, to czaty
+void QTlen::parse_cipher(QDomNode node)
+{
+    socket->switchCrypted(true);
+    socket->write("<cipher type='ok'/>");
+    emit connected();
+    QByteArray loginString("<iq type=\"set\" id=\""+sessionId.toAscii()+"\"><query xmlns=\"jabber:iq:auth\"><username>"+username.toAscii()+"</username><digest>"+tlenHash(password, sessionId)+"</digest><resource>QTlen4</resource><host>tlen.pl</host></query></iq>");
+    socket->write(loginString);
+}
+
+void QTlen::parse_avatar(QDomNode node)
+{
+    token = node.toElement().namedItem("token").toElement().text();
+    emit receivedToken(token);
+}
+
+void QTlen::parse_m(QDomNode node)
+{
+    if (node.toElement().hasAttribute("tp") and (node.toElement().attribute("tp", "") != "p"))
+    {
+        if (node.toElement().attribute("tp", "") == "t")
+            emit typingStarted(node.toElement().attribute("f", ""));
+        else if (node.toElement().attribute("tp", "") == "u")
+            emit typingStopped(node.toElement().attribute("f", ""));
+        else if (node.toElement().attribute("tp", "") == "a")
+            emit soundAlert(node.toElement().attribute("f", ""));
+    }
+    // jak nie powiadomienia, to czaty
 /*
-	<m f='261@c/~Pretorius'><b n='6' f='0' c='000000' s='10'>witaj+:D</b></m>
+<m f='261@c/~Pretorius'><b n='6' f='0' c='000000' s='10'>witaj+:D</b></m>
 
-	n - font style (?)
-	f - font family
-	c - font color
-	s - font size
-	<b>msg body</b>
+n - font style (?)
+f - font family
+c - font color
+s - font size
+<b>msg body</b>
 
-	if <m> contains tp='p', it's a private message
+if <m> contains tp='p', it's a private message
 */
-		    else
-		    {
-			QString from = node.toElement().attribute("f");
-			QDomElement e_body = node.toElement().namedItem("b").toElement();
-			QString color = e_body.attribute("c").prepend("#");
-			int size = e_body.attribute("s").toInt();
-			QString body = e_body.text();
-		    }
-		}
-		//SPAAAAM!
-		else if (node.nodeName() == "message")
-		{
-			QDateTime datetime = QDateTime::currentDateTime();
-			QString sender = node.toElement().attribute("from", "");
-                        emit typingStopped(sender);
-                        QString type = node.toElement().attribute("type", "");
-                        if (type == "pic")
-                        {
-                            QString idt = node.toElement().attribute("idt", "").toAscii();
-                            QString crc = node.toElement().attribute("crc", "");
-                            QString rt = node.toElement().attribute("rt", "");
-                            if ((crc != "") && (rt == "") && (crc != "n"))
-                            {
-                                socket->write("<message type='pic' crc_c='n' idt='"+idt.toAscii()+"' to='"+sender.toAscii()+"' />");
-                            }
-                            else if ((crc == "") && (rt != ""))
-                            {
-                                emit imageReadyToDownload(rt, idt, sender);
-                            }
-                            else if (crc == "n")
-                            {
-                                emit sendImage(idt, sender);
-                            }
-                        }
-                        else
-                        //begin wiadomość tekstowa
-                        {
-                            //QDomNode n = node.toElement().firstChild();
-                            QString msg = decode(node.toElement().namedItem("body").toElement().text());
-                            if (!node.toElement().namedItem("x").isNull())
-				{
-					if (node.toElement().namedItem("x").toElement().attribute("xmlns", "") == "jabber:x:delay")
-						{
-							//obliczamy stampa
-							//stamp='20090125T19:48:40'
-							QString stamp = node.toElement().namedItem("x").toElement().attribute("stamp", "");
-							int year = stamp.mid( 0, 4 ).toInt();
-							int month = stamp.mid( 4, 2 ).toInt();
-							int day = stamp.mid( 6, 2 ).toInt();
-							int hour = stamp.mid( 9, 2 ).toInt();
-							int min = stamp.mid( 12, 2 ).toInt();
-							int sec = stamp.mid( 15, 2 ).toInt();
-							datetime.setDate( QDate( year, month, day ) );
-							datetime.setTime( QTime( hour, min, sec ) );
-						}
-				}
-                            if (sender != "b73@tlen.pl") //nie potrzebujemy spamu
-				emit message(sender, msg, datetime);
-                        }
-                        //end wiadomość tekstowa
-		}
-		//romanse z serwerem
-		else if (node.nodeName() == "iq")
-		{
-			//może to z telewizji? nie, jednak z czata
-			if (node.toElement().attribute("from") == "c")
-			{
-			}
-			//jak nie z czata, to i tak się przyjrzymy
-			else
-			{
-				if (node.toElement().attribute("id", "") == "GetRoster")
-				{
-					emit rosterInfoBegin();
-					QDomElement e = node.toElement();
-					QDomNode n = e.firstChild().toElement().firstChild();
-					QString group("");
-					while (!n.isNull())
-					{
-						if (n.isElement())
-						{
-							QDomElement ee = n.toElement();
-							if (ee.tagName() == "item")
-							{
-								if(!ee.namedItem("group").isNull())
-									group = decode(ee.namedItem("group").toElement().text());
-								else
-									group = "";
-								emit rosterItem(ee.attribute("jid", ""), group, decode(ee.attribute("name", "")), ee.attribute("subscription"));
-								if (ee.attribute("subscription") == "from" and !ee.hasAttribute("ask"))
-									emit autorizationRequest(ee.attribute("jid", ""));
-							}
-						}
-						n = n.nextSibling();
-					}
-					emit rosterInfoEnd();
-				}
-				else if (node.toElement().attribute("type", "") == "result")
-				{
-					if (node.toElement().attribute("id", "") == sessionId) //type = error to błąd logowania
-					{	
-                                            if (node.toElement().attribute("from", "") == "tcfg")
-                                            {
-                                                    parseMailConfig(node.toElement().firstChild().toElement().firstChild());
-                                            }
-                                            else
-                                            {
-                                                isConnected = true;
-						emit authenticated();
-                                            }
-					}
-					else if (node.toElement().attribute("id", "") == "src3@abcd")
-					{
-						QDomNode n = node.toElement().namedItem("query").toElement().firstChild();
-						if(!n.isNull())
-						{
-							QDomElement e = n.toElement();
-							QTlenUserInfo info;
-							info.jid	= e.attribute("jid");
-							info.first	= decode(e.namedItem("first").toElement().text());
-							info.last	= decode(e.namedItem("last").toElement().text());
-							info.nick	= decode(e.namedItem("nick").toElement().text());
-							info.email	= decode(e.namedItem("email").toElement().text());
-							info.city	= decode(e.namedItem("c").toElement().text());
-							info.school	= decode(e.namedItem("e").toElement().text());
-							info.job	= e.namedItem("j").toElement().text().toInt();
-							info.lookingFor	= e.namedItem("r").toElement().text().toInt();
-							info.sex	= e.namedItem("s").toElement().text().toInt();
-							info.year	= e.namedItem("b").toElement().text().toInt();
-							emit vcardArrived(info);
-						}
-					}
-					else if (node.toElement().attribute("id", "") == "src")
-					{
-						QDomNode n = node.toElement().namedItem("query").toElement().firstChild();
-						emit searchResultBegin(!n.isNull());
-						while(!n.isNull())
-						{
-							QDomElement e = n.toElement();
-							QTlenUserInfo info;
-							info.jid	= e.attribute("jid") + QString("@tlen.pl");
-							info.first	= decode(e.namedItem("first").toElement().text());
-							info.last	= decode(e.namedItem("last").toElement().text());
-							info.nick	= decode(e.namedItem("nick").toElement().text());
-							info.email	= decode(e.namedItem("email").toElement().text());
-							info.city	= decode(e.namedItem("c").toElement().text());
-							info.school	= decode(e.namedItem("e").toElement().text());
-							info.job	= e.namedItem("j").toElement().text().toInt();
-							info.lookingFor	= e.namedItem("r").toElement().text().toInt();
-							info.sex	= e.namedItem("s").toElement().text().toInt();
-							info.year	= e.namedItem("b").toElement().text().toInt();
-							info.presence	= e.namedItem("a").toElement().text().toInt();
-							info.visible	= (bool)e.namedItem("v").toElement().text().toInt();
-							emit searchItem(info);
-							n = n.nextSibling();
-						}
-					}
-					else if (node.toElement().attribute("id", "") == "tr")
-					{
-						QDomNode n = node.toElement().namedItem("query").toElement().firstChild();
-						if(!n.isNull())
-						{
-							QDomElement e = n.toElement();
-							QTlenUserInfo info;
-							info.jid	= username + QString("@tlen.pl");
-							info.first	= decode(e.namedItem("first").toElement().text());
-							info.last	= decode(e.namedItem("last").toElement().text());
-							info.nick	= decode(e.namedItem("nick").toElement().text());
-							info.email	= decode(e.namedItem("email").toElement().text());
-							info.city	= decode(e.namedItem("c").toElement().text());
-							info.school	= decode(e.namedItem("e").toElement().text());
-							info.job	= e.namedItem("j").toElement().text().toInt();
-							info.lookingFor	= e.namedItem("r").toElement().text().toInt();
-							info.sex	= e.namedItem("s").toElement().text().toInt();
-							info.year	= e.namedItem("b").toElement().text().toInt();
-							info.visible	= (bool)e.namedItem("v").toElement().text().toInt();
-							emit myInfoArrived(info);
-						}
-					}
-				}
-				else if (node.toElement().attribute("type") == "set")
-				{
-					//pewnie jakaś aktualizacja rostera
-					//na pewno znajdziemy tam tag <query>
-					QDomNode e = node.toElement().namedItem("query").toElement().firstChild();
-					while(!e.isNull())
-					{
-						QString group("");
-						QString jid = e.toElement().attribute("jid");
-						QString name = decode(e.toElement().attribute("name"));
-						QString subs = e.toElement().attribute("subscription");
-						if(!e.toElement().namedItem("group").isNull())
-							group = decode(e.toElement().namedItem("group").toElement().text());
-						emit rosterItem(jid, group, name, subs);
-						e = e.nextSibling();
-					}
-				}
-				else if (node.toElement().attribute("type") == "error" and node.toElement().attribute("id", "") == sessionId)
-					emit authorizationError();
-			}
-		}
-		//ktoś wylazł z nory
-		else if (node.nodeName() == "presence")
-		{
-			QString user = node.toElement().attribute("from", "");
-			if(node.toElement().hasAttribute("type") and node.toElement().attribute("type", "") == "subscribe" and !node.toElement().hasAttribute("ask"))
-			{
-				emit autorizationRequest(user);
-			}
-			else 
-			{
-				QString desc("");
-                                QString avatar_type("-1");
-				QString avatar_digest("");
-				QTlenPresence type = Offline;
-				if(!node.toElement().namedItem("status").isNull())
-				{
-					desc = decode(node.toElement().namedItem("status").toElement().text());
-				}
-                                //Pobieramy typ avatara
-                                if(!node.toElement().namedItem("avatar").isNull())
-                                {
-                                        avatar_type=node.toElement().namedItem("avatar")
-                                                    .toElement().namedItem("a")
-                                                    .toElement().attribute("type", "-1");
-					avatar_digest=node.toElement().namedItem("avatar")
-						    .toElement().namedItem("a")
-						    .toElement().attribute("md5", "");
-                                }
-				if(node.toElement().hasAttribute("type"))
-				{
-					if (node.toElement().attribute("type", "") == "unavailable")
-						type = Offline;
-				}
-				else
-				{
-					QString plainType = node.toElement().firstChild().toElement().text();
-					if (plainType == "available")
-						type = Online;
-					else if (plainType == "chat")
-						type = Chatty;
-					else if (plainType == "away")
-						type = Away;
-					else if (plainType == "xa")
-						type = XA;
-					else if (plainType == "dnd")
-						type = DND;
-				}
-				emit presenceFrom(user, type, desc, avatar_type, avatar_digest);
-			}
-		}
-                else if (node.nodeName() == "n")
+    else
+    {
+        QString from = node.toElement().attribute("f");
+        QStringList list = from.split("/");
+        QDomElement e_body = node.toElement().namedItem("b").toElement();
+        QString color = e_body.attribute("c").prepend("#");
+        int size = e_body.attribute("s").toInt();
+        QString type = node.toElement().attribute("tp", "o");
+        QString body = QString(decode(e_body.text()));
+        if(list.size() == 2)
+        emit chatMessage(list.at(0),
+                         QString(decode(list.at(1))),
+                         body,
+                         type);
+    }
+}
+
+void QTlen::parse_message(QDomNode node)
+{
+    QDateTime datetime = QDateTime::currentDateTime();
+    QString sender = node.toElement().attribute("from", "");
+    emit typingStopped(sender);
+    QString type = node.toElement().attribute("type", "");
+    if (type == "pic")
+    {
+        QString idt = node.toElement().attribute("idt", "").toAscii();
+        QString crc = node.toElement().attribute("crc", "");
+        QString rt = node.toElement().attribute("rt", "");
+        if ((crc != "") && (rt == "") && (crc != "n"))
+        {
+            socket->write("<message type='pic' crc_c='n' idt='"+idt.toAscii()+"' to='"+sender.toAscii()+"' />");
+        }
+        else if ((crc == "") && (rt != ""))
+        {
+            emit imageReadyToDownload(rt, idt, sender);
+        }
+        else if (crc == "n")
+        {
+            emit sendImage(idt, sender);
+        }
+    }
+    else
+    //begin wiadomość tekstowa
+    {
+        //QDomNode n = node.toElement().firstChild();
+        QString msg = decode(node.toElement().namedItem("body").toElement().text());
+        if (!node.toElement().namedItem("x").isNull())
+        {
+            if (node.toElement().namedItem("x").toElement().attribute("xmlns", "") == "jabber:x:delay")
+            {
+                //obliczamy stampa
+                //stamp='20090125T19:48:40'
+                QString stamp = node.toElement().namedItem("x").toElement().attribute("stamp", "");
+                int year = stamp.mid( 0, 4 ).toInt();
+                int month = stamp.mid( 4, 2 ).toInt();
+                int day = stamp.mid( 6, 2 ).toInt();
+                int hour = stamp.mid( 9, 2 ).toInt();
+                int min = stamp.mid( 12, 2 ).toInt();
+                int sec = stamp.mid( 15, 2 ).toInt();
+                datetime.setDate( QDate( year, month, day ) );
+                datetime.setTime( QTime( hour, min, sec ) );
+            }
+        }
+        if (sender != "b73@tlen.pl") //nie potrzebujemy spamu
+            emit message(sender, msg, datetime);
+    }
+    //end wiadomość tekstowa
+}
+
+void QTlen::parse_iq(QDomNode node)
+{
+    //może to z telewizji? nie, jednak z czata
+    if (node.toElement().attribute("from") == "c")
+    {
+        if (!node.toElement().attribute("type", "").isEmpty())
+        {
+            QDomNode l = node.namedItem("l");
+            QString p = node.toElement().attribute("p", "0").toAscii();
+            if (l.hasChildNodes())
+            {
+                QDomNode i = l.firstChild();
+                QList<ChatRoomNode> list;
+                while (!i.isNull())
                 {
-                    QString sender = decode(node.toElement().attribute("f", ""));
-                    QString subject = decode(node.toElement().attribute("s", ""));
-                    QString id = node.toElement().attribute("id", "");
-                    QString fld = node.toElement().attribute("fld", "");
+                    ChatRoomNode n;
+                    QDomElement e = i.toElement();
+                    n.parent = p;
+                    n.id = QString(e.attribute("i").toAscii());
+                    n.flags = e.attribute("f").toInt();
+                    n.name = decode(e.attribute("n").toAscii());
+                    n.users = e.attribute("c", "0").toInt();
+                    list.append(n);
+                    i = i.nextSibling();
                 }
-		node=node.nextSibling();
-	}
+                if(!list.isEmpty())
+                    emit chatRoomNodeList(p, list);
+            }
+        }
+    }
+    //jak nie z czata, to i tak się przyjrzymy
+    else
+    {
+        if (node.toElement().attribute("id", "") == "GetRoster")
+        {
+            emit rosterInfoBegin();
+            QDomElement e = node.toElement();
+            QDomNode n = e.firstChild().toElement().firstChild();
+            QString group("");
+            while (!n.isNull())
+            {
+                if (n.isElement())
+                {
+                    QDomElement ee = n.toElement();
+                    if (ee.tagName() == "item")
+                    {
+                        if(!ee.namedItem("group").isNull())
+                            group = decode(ee.namedItem("group").toElement().text());
+                        else
+                            group = "";
+                        emit rosterItem(ee.attribute("jid", ""),
+                                        group,
+                                        decode(ee.attribute("name", "")),
+                                        ee.attribute("subscription"));
+                        if (ee.attribute("subscription") == "from" and !ee.hasAttribute("ask"))
+                            emit autorizationRequest(ee.attribute("jid", ""));
+                    }
+                }
+                n = n.nextSibling();
+            }
+            emit rosterInfoEnd();
+        }
+        else if (node.toElement().attribute("type", "") == "result")
+        {
+            if (node.toElement().attribute("id", "") == sessionId) //type = error to błąd logowania
+            {
+                if (node.toElement().attribute("from", "") == "tcfg")
+                {
+                        parseMailConfig(node.toElement().firstChild().toElement().firstChild());
+                }
+                else
+                {
+                    isConnected = true;
+                    emit authenticated();
+                }
+            }
+            else if (node.toElement().attribute("id", "") == "src3@abcd")
+            {
+                QDomNode n = node.toElement().namedItem("query").toElement().firstChild();
+                if(!n.isNull())
+                {
+                    QDomElement e = n.toElement();
+                    QTlenUserInfo info;
+                    info.jid	= e.attribute("jid");
+                    info.first	= decode(e.namedItem("first").toElement().text());
+                    info.last	= decode(e.namedItem("last").toElement().text());
+                    info.nick	= decode(e.namedItem("nick").toElement().text());
+                    info.email	= decode(e.namedItem("email").toElement().text());
+                    info.city	= decode(e.namedItem("c").toElement().text());
+                    info.school	= decode(e.namedItem("e").toElement().text());
+                    info.job	= e.namedItem("j").toElement().text().toInt();
+                    info.lookingFor	= e.namedItem("r").toElement().text().toInt();
+                    info.sex	= e.namedItem("s").toElement().text().toInt();
+                    info.year	= e.namedItem("b").toElement().text().toInt();
+                    emit vcardArrived(info);
+                }
+            }
+            else if (node.toElement().attribute("id", "") == "src")
+            {
+                QDomNode n = node.toElement().namedItem("query").toElement().firstChild();
+                emit searchResultBegin(!n.isNull());
+                while(!n.isNull())
+                {
+                    QDomElement e = n.toElement();
+                    QTlenUserInfo info;
+                    info.jid	= e.attribute("jid") + QString("@tlen.pl");
+                    info.first	= decode(e.namedItem("first").toElement().text());
+                    info.last	= decode(e.namedItem("last").toElement().text());
+                    info.nick	= decode(e.namedItem("nick").toElement().text());
+                    info.email	= decode(e.namedItem("email").toElement().text());
+                    info.city	= decode(e.namedItem("c").toElement().text());
+                    info.school	= decode(e.namedItem("e").toElement().text());
+                    info.job	= e.namedItem("j").toElement().text().toInt();
+                    info.lookingFor	= e.namedItem("r").toElement().text().toInt();
+                    info.sex	= e.namedItem("s").toElement().text().toInt();
+                    info.year	= e.namedItem("b").toElement().text().toInt();
+                    info.presence	= e.namedItem("a").toElement().text().toInt();
+                    info.visible	= (bool)e.namedItem("v").toElement().text().toInt();
+                    emit searchItem(info);
+                    n = n.nextSibling();
+                }
+            }
+            else if (node.toElement().attribute("id", "") == "tr")
+            {
+                QDomNode n = node.toElement().namedItem("query").toElement().firstChild();
+                if(!n.isNull())
+                {
+                    QDomElement e = n.toElement();
+                    QTlenUserInfo info;
+                    info.jid	= username + QString("@tlen.pl");
+                    info.first	= decode(e.namedItem("first").toElement().text());
+                    info.last	= decode(e.namedItem("last").toElement().text());
+                    info.nick	= decode(e.namedItem("nick").toElement().text());
+                    info.email	= decode(e.namedItem("email").toElement().text());
+                    info.city	= decode(e.namedItem("c").toElement().text());
+                    info.school	= decode(e.namedItem("e").toElement().text());
+                    info.job	= e.namedItem("j").toElement().text().toInt();
+                    info.lookingFor	= e.namedItem("r").toElement().text().toInt();
+                    info.sex	= e.namedItem("s").toElement().text().toInt();
+                    info.year	= e.namedItem("b").toElement().text().toInt();
+                    info.visible	= (bool)e.namedItem("v").toElement().text().toInt();
+                    emit myInfoArrived(info);
+                }
+            }
+        }
+        else if (node.toElement().attribute("type") == "set")
+        {
+            //pewnie jakaś aktualizacja rostera
+            //na pewno znajdziemy tam tag <query>
+            QDomNode e = node.toElement().namedItem("query").toElement().firstChild();
+            while(!e.isNull())
+            {
+                QString group("");
+                QString jid = e.toElement().attribute("jid");
+                QString name = decode(e.toElement().attribute("name"));
+                QString subs = e.toElement().attribute("subscription");
+                if(!e.toElement().namedItem("group").isNull())
+                    group = decode(e.toElement().namedItem("group").toElement().text());
+                emit rosterItem(jid, group, name, subs);
+                e = e.nextSibling();
+            }
+        }
+        else if (node.toElement().attribute("type") == "error" and node.toElement().attribute("id", "") == sessionId)
+            emit authorizationError();
+    }
+}
+
+void QTlen::parse_presence(QDomNode node)
+{
+    QString user = node.toElement().attribute("from", "");
+    if(node.toElement().hasAttribute("type") and node.toElement().attribute("type", "") == "subscribe" and !node.toElement().hasAttribute("ask"))
+    {
+        emit autorizationRequest(user);
+    }
+    else
+    {
+        QString desc("");
+        QString avatar_type("-1");
+        QString avatar_digest("");
+        QTlenPresence type = Offline;
+        QDomNode status = node.toElement().namedItem("status");
+        if(!status.isNull())
+        {
+            desc = decode(status.toElement().text());
+        }
+        //Pobieramy typ avatara
+        if(!node.toElement().namedItem("avatar").isNull())
+        {
+            avatar_type=node.toElement().namedItem("avatar")
+                        .toElement().namedItem("a")
+                        .toElement().attribute("type", "-1");
+            avatar_digest=node.toElement().namedItem("avatar")
+                        .toElement().namedItem("a")
+                        .toElement().attribute("md5", "");
+        }
+        QDomNode plainTypeNode;
+        if(node.namedItem("show").isNull())
+            plainTypeNode = status.namedItem("show");
+        else
+            plainTypeNode = node.namedItem("show");
+        if(node.toElement().hasAttribute("type"))
+        {
+            if (node.toElement().attribute("type", "") == "unavailable")
+                    type = Offline;
+        }
+        else
+        {
+            QString plainType = plainTypeNode.toElement().text();
+            if (plainType == "available")
+                type = Online;
+            else if (plainType == "chat")
+                type = Chatty;
+            else if (plainType == "away")
+                type = Away;
+            else if (plainType == "xa")
+                type = XA;
+            else if (plainType == "dnd")
+                type = DND;
+        }
+        emit presenceFrom(user, type, desc, avatar_type, avatar_digest);
+    }
+}
+
+void QTlen::parse_p(QDomNode node)
+{
+    QString f = node.toElement().attribute("f");
+    int a = node.toElement().attribute("a", "0").toInt();
+    QStringList args = f.split("/");
+    if(args.size() == 2)
+    emit chatPresence(args.at(0),
+                      QString(decode(args.at(1))),
+                      a,
+                      node.namedItem("s").isNull());
+}
+
+void QTlen::parse_n(QDomNode node)
+{
+    QString sender = decode(node.toElement().attribute("f", ""));
+    QString subject = decode(node.toElement().attribute("s", ""));
+    QString id = node.toElement().attribute("id", "");
+    QString fld = node.toElement().attribute("fld", "");
 }
 
 void QTlen::parseMailConfig(QDomNode node)
@@ -557,6 +626,7 @@ void QTlen::searchUsers(QTlenUserInfo info)
 
 void QTlen::getMailInfo()
 {
+    this->chatsGetTopLevelGroups();
     socket->write("<iq to='tcfg' type='get' id='" + sessionId.toAscii() +"'></iq>");
 }
 
@@ -663,3 +733,55 @@ void QTlen::chatsGetTopLevelGroups()
 	//socket->write("<iq to='fiza@tlen.pl'><query xmlns='p2p'><fs t=\"fiza@tlen.pl/Tlen\" e=\"1\" i=\"139952408\" c=\"1\" s=\"590\" v=\"2\" /></query></iq>");
 };
 
+void QTlen::chatsExpandGroup(QString id)
+{
+    QString string("<iq to='c' type='1' p='%1'/><iq to='c' type='2' p='%1'/>");
+    string = string.arg(id);
+    socket->write(string.toAscii());
+    //qDebug(string.toAscii());
+}
+
+void QTlen::chatsJoinRoom(QString id, QString nick)
+{
+    QString tmpId;
+    if (nick.isEmpty())
+       tmpId = QString(encode(this->username));
+    else
+       tmpId = QString("~" + encode(nick));
+    socket->write("<p to='" + id.toAscii() + "/" + tmpId.toAscii() + "'/>");
+}
+
+void QTlen::chatsLeaveRoom(QString id)
+{
+    QString string("<p to='%1'><s>unavailable</s></p>");
+    string = string.arg(id);
+    socket->write(string.toAscii());
+}
+
+void QTlen::chatsSendMessage(QString to, QString body)
+{
+    if (to.contains("/"))
+    {
+        QStringList tmp = to.split("/");
+        QString var = tmp.at(1);
+        if(var.startsWith("~"))
+        {
+            var = var.remove(0,1);
+            var = QString(encode(var));
+            var.prepend("~");
+        }
+        tmp[1] = var;
+        to = tmp.join("/");
+
+    }
+    QString string("<m to='%1'><b n='1' s='10' f='0' c='000000'>%2</b></m>");
+    string = string.arg(to, QString(encode(body)));
+    socket->write(string.toAscii());
+}
+
+void QTlen::chatsSendPrivMessage(QString to, QString body)
+{
+    QString string("<m to='%s'><b>%s</b></m>");
+    string = string.arg(to, QString(encode(body)));
+    socket->write(string.toAscii());
+}

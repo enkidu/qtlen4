@@ -1,6 +1,8 @@
 #include "historymanager.hpp"
 
-QTlenHistoryManager::QTlenHistoryManager()
+QTlenHistoryManager::QTlenHistoryManager(QObject * parent) : QThread(parent){}
+
+void QTlenHistoryManager::run()
 {
     db = QSqlDatabase::addDatabase("QSQLITE");
     db.setDatabaseName(QDir::homePath() + "/.qtlen4/history");
@@ -11,9 +13,10 @@ QTlenHistoryManager::QTlenHistoryManager()
 	query.exec("CREATE TABLE messages (id INTEGER PRIMARY KEY, sent_by, sent_to, body, timestamp)");
 	query.exec("CREATE TABLE incoming (id INTEGER PRIMARY KEY, sent_by, sent_to, body, timestamp)");
     }
+    exec();
 }
 
-void QTlenHistoryManager::saveMessage(QString from, QString to, QString body, QDateTime timestamp)
+void QTlenHistoryManager::saveMessage( const QString &from, const QString &to, const QString &body, const QDateTime &timestamp)
 {
     QSqlQuery query;
     query.prepare("INSERT INTO messages (id, sent_by, sent_to, body, timestamp) VALUES (NULL, :sent_by, :sent_to, :body, :timestamp)");
@@ -25,11 +28,11 @@ void QTlenHistoryManager::saveMessage(QString from, QString to, QString body, QD
 
 }
 
-QList<QTlenMessageStruct> QTlenHistoryManager::getMessages(QString jid)
+void QTlenHistoryManager::getMessages(QString jid)
 {
 }
 
-QList<QTlenMessageStruct> QTlenHistoryManager::getLastMessages(QString jid, int limit)
+void QTlenHistoryManager::getLastMessages(QString jid, int limit)
 {
     QList<QTlenMessageStruct> list;
     QSqlQuery query;
@@ -51,5 +54,5 @@ QList<QTlenMessageStruct> QTlenHistoryManager::getLastMessages(QString jid, int 
 	i.dateTime = QDateTime::fromTime_t(query.value(timeNo).toInt());
 	list.append(i);
     }
-    return list;
+    emit lastMessages(jid, list);
 }

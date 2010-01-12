@@ -1,5 +1,5 @@
-#include "qtlenchatwindow.hpp"
-
+    #include "qtlenchatwindow.hpp"
+#include <QWebFrame>
 QTlenChatWidget::QTlenChatWidget(QWidget * parent, Qt::WFlags f):QWidget(parent, f)
 {
     settings        = new QSettings(QDir::homePath() + "/.qtlen4/config", QSettings::IniFormat);
@@ -11,7 +11,7 @@ QTlenChatWidget::QTlenChatWidget(QWidget * parent, Qt::WFlags f):QWidget(parent,
         verticalLayout  ->setSpacing(0);
         verticalLayout  ->setMargin(0);
 
-        te_chatWindow   = new QTextBrowser(this);
+        te_chatWindow   = new QWebView(this);
 
 	QSizePolicy sizePolicy(QSizePolicy::Expanding, QSizePolicy::Expanding);
 	sizePolicy.setHorizontalStretch(0);
@@ -50,8 +50,7 @@ QTlenChatWidget::QTlenChatWidget(QWidget * parent, Qt::WFlags f):QWidget(parent,
         myBg            = settings->value("/preferences/sent/bground", "#ffffff").toString();
         chatColor       = settings->value("/preferences/received/color", "#000000").toString();
         chatBg          = settings->value("/preferences/received/bground", "#ffffff").toString();
-        vertScroll      = te_chatWindow->verticalScrollBar();
-        document = te_chatWindow->document();
+        document = new QTextDocument();
 	cursor = QTextCursor(document);
         if (!testAttribute(Qt::WA_DeleteOnClose)) this->setAttribute(Qt::WA_DeleteOnClose, true);
         //te_chatInput->focusWidget();
@@ -84,7 +83,10 @@ void QTlenChatWidget::showMessage(const QString body,const  QDateTime stamp)
 	blockFormat	    .setBottomMargin(2);
 	cursor		    .insertBlock(blockFormat, charFormat);
 	cursor		    .insertHtml(formatMessage(stamp, nick, body, chatColor));
-	vertScroll	    ->setValue(vertScroll->maximum());
+        te_chatWindow->setHtml(document->toHtml());
+        QWebFrame *frame = te_chatWindow->page()->currentFrame();
+        frame->setScrollBarValue(Qt::Vertical,
+                                 frame->scrollBarMaximum(Qt::Vertical));
 }
 
 void QTlenChatWidget::closeEvent(QCloseEvent *event)
@@ -99,8 +101,11 @@ void QTlenChatWidget::closeEvent(QCloseEvent *event)
 void QTlenChatWidget::keyPressHandler()
 {
     if (!timer->isActive())
+        if (!te_chatInput->toPlainText().isEmpty())
+        {
 	emit typing(jid, true);
-    timer->start();
+            timer->start();
+        }
 }
 
 void QTlenChatWidget::typingStopped()
@@ -131,8 +136,14 @@ void QTlenChatWidget::sendMessage()
 	charFormat	    .setForeground(foreground);
 	blockFormat	    .setBottomMargin(2);
 	cursor		    .insertBlock(blockFormat, charFormat);
-	cursor.insertHtml(formatMessage(QDateTime::currentDateTime(), myNick, te_chatInput->toPlainText(), myColor));
-	vertScroll->setValue(vertScroll->maximum());
+        cursor.insertHtml(formatMessage(QDateTime::currentDateTime(),
+                                        myNick,
+                                        te_chatInput->toPlainText(),
+                                        myColor));
+        te_chatWindow->setHtml(document->toHtml());
+        QWebFrame *frame = te_chatWindow->page()->currentFrame();
+        frame->setScrollBarValue(Qt::Vertical,
+                                 frame->scrollBarMaximum(Qt::Vertical));
         te_chatInput->clear();
 	timer->stop();
     }
@@ -169,7 +180,6 @@ QString QTlenChatWidget::formatMessage(const QDateTime time,const QString nick,Q
 {
     QRegExp rx("(?#Protocol)(?:(?:ht|f)tp(?:s?)\\:\\/\\/|~/|/)?(?#Username:Password)(?:\\w+:\\w+@)?(?#Subdomains)(?:(?:[-\\w]+\\.)+(?#TopLevel Domains)(?:com|org|net|gov|mil|biz|info|mobi|name|aero|jobs|museum|travel|[a-z]{2}))(?#Port)(?::[\\d]{1,5})?(?#Directories)(?:(?:(?:/(?:[-\\w~!$+|.,=]|%[a-f\\d]{2})+)+|/)+|\\?|#)?(?#Query)(?:(?:\\?(?:[-\\w~!$+|.,*:]|%[a-f\\d{2}])+=(?:[-\\w~!$+|.,*:=]|%[a-f\\d]{2})*)(?:&(?:[-\\w~!$+|.,*:]|%[a-f\\d{2}])+=(?:[-\\w~!$+|.,*:=]|%[a-f\\d]{2})*)*)*(?#Anchor)(?:#(?:[-\\w~!$+|.,*:=]|%[a-f\\d]{2})*)?");
     rx.indexIn(body, 0);
-qDebug(QByteArray::number(rx.matchedLength()));
 	body = Qt::escape(body);
 	body.replace("\n\r", "<br>");
 	body.replace("\n", "<br>");
@@ -180,11 +190,12 @@ qDebug(QByteArray::number(rx.matchedLength()));
 
 void QTlenChatWidget::showPreviousMessages(const QList<QTlenMessageStruct> list)
 {
+    cursor.movePosition(QTextCursor::Start);
     if (!list.isEmpty())
     {
 	for(int i = 0; i < list.size(); i++)
 	{
-	    cursor.movePosition(QTextCursor::End);
+            //cursor.movePosition(QTextCursor::End);
 	    cursor.insertBlock();
 	    QString currNick;
 	    if (list[i].sent_by  == jid)
@@ -192,7 +203,6 @@ void QTlenChatWidget::showPreviousMessages(const QList<QTlenMessageStruct> list)
 	    else
 		currNick = myNick;
 	    cursor.insertHtml(formatMessage(list[i].dateTime, currNick, list[i].body, "#000"));
-	    vertScroll->setValue(vertScroll->maximum());
 	}
 	cursor.insertHtml("<hr />");
     }
@@ -204,7 +214,15 @@ void QTlenChatWidget::showNotify(const QString text)
 
 void QTlenChatWidget::showImage(QPixmap image)
 {
+    QString path = QDir::homePath() + "/.qtlen4/images/";
+    QDir().mkdir(path);
+    QImage img = image.toImage();
+    QString filename = QString("%1-%2.png").arg(jid).arg(img.cacheKey());
+    img.save(path + filename);
             cursor.movePosition(QTextCursor::End);
             cursor.insertBlock();
-            cursor.insertImage(image.toImage());
-}
+            cursor.insertHtml("<img src=\"" + path + filename +"\" />");
+            te_chatWindow->setHtml(document->toHtml());
+        QWebFrame *frame = te_chatWindow->page()->currentFrame();
+        frame->setScrollBarValue(Qt::Vertical,
+                                 frame->scrollBarMaximum(Qt::Vertical));}

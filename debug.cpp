@@ -4,7 +4,7 @@ QTlenDebugWindow::QTlenDebugWindow(QWidget * parent, Qt::WFlags f):QWidget(paren
 {
 	ui.setupUi(this);
 	ui.debug_console->setReadOnly(true);
-	connect(ui.textInput, SIGNAL(returnPressed()), this, SLOT(sendXML()));
+        //connect(ui.textInput, SIGNAL(returnPressed()), this, SLOT(sendXML()));
         connect(ui.ps_sendXML, SIGNAL(clicked()), this, SLOT(sendXML()));
 }
 

@@ -92,6 +92,7 @@ class QTlenRosterManager: public QObject
 		int			getIndexOfGroup(QString);
 		int			getIndexOfAddedGroup(QString group);
 		QTreeWidgetItem*	getItemOfGroup(QString group);
+                RosterItem                          getRosterItem(QString);
                 QStringList             getGroupsList();
 	private:
 		QList<RosterItem>	rosterItems;

@@ -8,6 +8,7 @@ QTlenChatContainer::QTlenChatContainer(QWidget * parent, Qt::WFlags f):QMainWind
         QWidget *centralwidget = new QWidget(this);
         stack = new QStackedWidget(0);
         tabbar = new QTabBar(0);
+        messages = 0;
         tabbar->setTabsClosable(true);
         connect(tabbar,
                 SIGNAL(tabCloseRequested(int)),
@@ -34,7 +35,6 @@ QTlenChatContainer::QTlenChatContainer(QWidget * parent, Qt::WFlags f):QMainWind
 
 QTlenChatWidget * QTlenChatContainer::addChat()
 {
-    qDebug("calling QTlenChatContainer::addChat()");
         QTlenChatWidget * widget = new QTlenChatWidget;
         stack->addWidget(widget);
         tabbar->addTab("");
@@ -43,7 +43,6 @@ QTlenChatWidget * QTlenChatContainer::addChat()
 
 void QTlenChatContainer::setTabText(QTlenChatWidget * widget, QString name)
 {
-    qDebug("calling QTlenChatContainer::setTabText()");
     int index = stack->indexOf(widget);
     if (index != -1)
         tabbar->setTabText(index, name);
@@ -76,6 +75,8 @@ void QTlenChatContainer::tabChanged(int tab)
     if (tabbar->tabTextColor(tab) == QColor("#f00"))
         tabbar->setTabTextColor(tab, QColor("#000"));
     this->setWindowTitle(tabbar->tabText(tab));
+    this->setWindowIcon(tabbar->tabIcon(tab));
+    this->icon = tabbar->tabIcon(tab);
 }
 
 void QTlenChatContainer::showEvent(QShowEvent *event)
@@ -83,8 +84,12 @@ void QTlenChatContainer::showEvent(QShowEvent *event)
     if (event->spontaneous())
     {
         blinkTimer->stop();
-        if (windowTitle() == "")\
+        if (windowTitle() == "")
+        {
              setWindowTitle(title);
+             setWindowIcon(icon);
+            messages = 0;
+         }
     }
     event->accept();
 }
@@ -98,7 +103,6 @@ void QTlenChatContainer::closeEvent(QCloseEvent *event)
 {
     while (stack->count() != 0)
     {
-        qDebug(QByteArray::number(stack->count()));
         closeAndRemove(0);
 
     }
@@ -113,15 +117,27 @@ void QTlenChatContainer::swapTitle()
     {
         title = windowTitle();
         setWindowTitle("");
+        QPixmap pix(":/icons/icons/16x16/message.png");
+        QPainter painter(&pix);
+        painter.drawText(0,0,16,16, Qt::AlignCenter, QString::number(messages));
 
+        setWindowIcon(QIcon(pix));
     }
     else
     {
         setWindowTitle(title);
+        setWindowIcon(icon);
     }
     if (isActiveWindow())
     {
         blinkTimer->stop();
         setWindowTitle(title);
+        setWindowIcon(icon);
+        messages = 0;
     }
+}
+
+void QTlenChatContainer::increasePendingMessages()
+{
+    messages++;
 }

@@ -26,6 +26,19 @@ class QTlenMainWindow: public QMainWindow
         QAction *actionChats;
         QAction *actionSearch;
         QWidget *centralwidget;
+
+        QIcon icon1;
+        QIcon icon2;
+        QIcon icon3;
+        QIcon icon4;
+        QIcon icon5;
+        QIcon icon6;
+        QIcon icon7;
+        QIcon icon8;
+        QIcon icon9;
+        QIcon icon10;
+        QIcon icon11;
+
         QVBoxLayout *verticalLayout;
 	QHBoxLayout *presenceLayout;
         QTlenRosterBox *lv_roster;
@@ -50,6 +63,7 @@ class QTlenMainWindow: public QMainWindow
         void            menuActionChat();
         void            menuActionHistory();
         void            menuActionEdit();
+        void            setStatus(int);
     signals:
         void		subscribed(QString, bool);
         void            deleteUser(QTreeWidgetItem*);

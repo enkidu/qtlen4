@@ -34,7 +34,7 @@ int QTlenRosterItem::paint(QPainter *painter, const QRect &rect, const QPalette 
 {
     painter->save();
     painter->setRenderHint(QPainter::Antialiasing, true);
-    if (checked) painter->setBrush(palette.highlightedText());
+    if (checked) painter->setBrush(QColor("#fff"));
     else
         painter->setBrush(palette.foreground());
     //name
@@ -46,6 +46,7 @@ int QTlenRosterItem::paint(QPainter *painter, const QRect &rect, const QPalette 
     QRect *nameBR = new QRect;
     QFont nameFont;
     nameFont.setBold(true);
+    nameFont.setPixelSize(14);
     painter->setFont(nameFont);
     painter->drawText(nameRect, (int)(Qt::AlignLeft | Qt::TextWordWrap), name, nameBR);
     //jid
@@ -66,7 +67,7 @@ int QTlenRosterItem::paint(QPainter *painter, const QRect &rect, const QPalette 
     descRect.setBottom(rect.bottom()-2);
     QRect *descBR = new QRect;
     QFont descFont;
-    descFont.setPointSize(7);
+    descFont.setPixelSize(10);
     descFont.setItalic(true);
     painter->setFont(descFont);
     painter->drawText(descRect, (int)(Qt::AlignLeft | Qt::TextWordWrap), desc, descBR);
@@ -76,7 +77,7 @@ int QTlenRosterItem::paint(QPainter *painter, const QRect &rect, const QPalette 
         theight = textHeight;
     else
         theight = 68;
-    //setHeight(68);
+    //setHeight(68);s
     painter->drawPixmap(rect.left()+2, rect.top()-8+rect.height()/2,16, 16, presence);
     painter->drawPixmap(rect.right()-66, rect.top()+2, 64, 64, avatar);
     painter->restore();
@@ -86,14 +87,15 @@ int QTlenRosterItem::paint(QPainter *painter, const QRect &rect, const QPalette 
  QSize QTlenRosterItem::sizeHint(const QStyleOptionViewItem &option, QWidget* tree) const
  {
      QFont descFont;
-     descFont.setPointSize(7);
+     descFont.setPixelSize(10);
      descFont.setItalic(true);
      QFontMetrics fm(descFont);
      QRect rect = fm.boundingRect(0,0,tree->width()-88,160, (int)(Qt::AlignLeft | Qt::TextWordWrap), desc);
      int h = rect.height();
-     if ((h + 34) < 68)
+     qDebug(QByteArray::number(h));
+     if ((h + 44) < 68)
          return QSize(160, 68);
-     return QSize(160, h+34);
+     return QSize(160, h+44);
  }
 
  void QTlenRosterItem::setHeight(int h)

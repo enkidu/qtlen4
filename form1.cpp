@@ -5,6 +5,7 @@ QTlenManager::QTlenManager():QObject()
 {
         QTextCodec::setCodecForTr (QTextCodec::codecForName ("UTF-8"));
         QTextCodec::setCodecForLocale (QTextCodec::codecForName ("ISO8859-2"));
+        QTextCodec::setCodecForCStrings(QTextCodec::codecForName ("ISO8859-2"));
         mainWindow = new QTlenMainWindow(0, 0);
         mainWindow->show();
 
@@ -21,9 +22,9 @@ QTlenManager::QTlenManager():QObject()
         roster->showOfflines(settings->value("/roster/offlines_visible", false).toBool());
 
 	history = new QTlenHistoryManager();
-	
+        history->start();
 
-
+        publicChats = new QTlenPublicChatsManager(this);
 	
 	tlen = new QTlen;
 	tlen->setUserParams(settings->value("/connection/username").toString(), settings->value("/connection/password").toString());
@@ -32,11 +33,35 @@ QTlenManager::QTlenManager():QObject()
 	if (settings->value("/advanced/xmlconsole", false).toBool())
 		debug->show();
 	chats = new QTlenChatManager(roster, history);
+        chats->enableHistory(settings->value("/history/enable", false).toBool());
 	chats->setMyInfo(settings->value("/preferences/nick",
 					 settings->value("/connection/username").toString()).toString(),
 			 settings->value("/connection/username").toString());
 	chats->setTrayIcon(sysIcon);
-
+            connect(tlen, SIGNAL(presenceFrom(QString,QTlenPresence,QString,QString,QString)),
+                    chats, SLOT(presenceFrom(QString,QTlenPresence,QString,QString,QString)));
+            qRegisterMetaType<QList<QTlenMessageStruct> >("QList<QTlenMessageStruct>");
+        connect(history,
+                SIGNAL(lastMessages(QString, const QList<QTlenMessageStruct>&)),
+                chats,
+                SLOT(lastMessages(QString, const QList<QTlenMessageStruct>&)),
+                Qt::QueuedConnection);
+        connect(chats,
+                SIGNAL(fetchLastMessages(QString,int)),
+                history,
+                SLOT(getLastMessages(QString,int)),
+                Qt::QueuedConnection);
+        connect(chats,
+                SIGNAL(saveMessage(const QString&,
+                                   const QString&,
+                                   const QString&,
+                                   const QDateTime&)),
+                history,
+                SLOT(saveMessage(const QString&,
+                                 const QString&,
+                                 const QString&,
+                                 const QDateTime&)),
+                Qt::QueuedConnection);
 	mainWindow->te_status->setPlainText(settings->value("/status/last", "").toString());
 	if (settings->value("/status/last", "").toString().isEmpty())
 	    mainWindow->lb_status->setText("Komunikat statusu");
@@ -44,8 +69,7 @@ QTlenManager::QTlenManager():QObject()
 	    mainWindow->lb_status->setText(settings->value("/status/last", "").toString());
 
 	connect(mainWindow->actionXMLConsole,	SIGNAL(toggled(bool)),					debug,		SLOT(setVisible(bool)));
-	connect(mainWindow->actionChats,	SIGNAL(activated()),				tlen,		SLOT(chatsGetTopLevelGroups()));
-	connect(tlen,			SIGNAL(socketError(QAbstractSocket::SocketError)),	this,	SLOT(displayError(QAbstractSocket::SocketError)));
+        connect(mainWindow->actionChats,	SIGNAL(activated()),				this,		SLOT(openPublicChatsWindow()));
 	connect(mainWindow->actionMyInfo,	SIGNAL(activated()),					tlen,		SLOT(getInfoAboutMyself()));
 	connect(mainWindow->cb_status,		SIGNAL(currentIndexChanged(int)),			this,		SLOT(setStatus(int)));
 	connect(mainWindow->te_status,		SIGNAL(returnPressed()),				this,		SLOT(setStatus()));
@@ -60,7 +84,39 @@ QTlenManager::QTlenManager():QObject()
 
 	connect(debug,			SIGNAL(XMLsend(QString)),	tlen,	SLOT(sendRawXML(QString)));
 
+   connect(tlen,
+           SIGNAL(chatRoomNodeList(QString,QList<ChatRoomNode>)),
+           publicChats,
+           SLOT(appendList(QString,QList<ChatRoomNode>)));
 
+   connect(publicChats,
+           SIGNAL(expandNode(QString)),
+           tlen,
+           SLOT(chatsExpandGroup(QString)));
+   connect(publicChats->window,
+           SIGNAL(chatRoomRequest(QString,QString)),
+           tlen,
+           SLOT(chatsJoinRoom(QString,QString)));
+   connect(tlen,
+           SIGNAL(chatMessage(QString,QString,QString,QString)),
+           publicChats,
+           SLOT(message(QString,QString,QString,QString)));
+   connect(tlen,
+           SIGNAL(chatPresence(QString,QString,int,bool)),
+           publicChats,
+           SLOT(presence(QString,QString,int,bool)));
+   connect(publicChats,
+           SIGNAL(leaveChatroom(QString)),
+           tlen,
+           SLOT(chatsLeaveRoom(QString)));
+   connect(publicChats,
+           SIGNAL(message(QString,QString)),
+           tlen,
+           SLOT(chatsSendMessage(QString,QString)));
+   connect(publicChats,
+           SIGNAL(getTopLevel()),
+           tlen,
+           SLOT(chatsGetTopLevelGroups()));
         //new connections
         //inbound
         connect(tlen,
@@ -200,6 +256,10 @@ QTlenManager::QTlenManager():QObject()
 		SIGNAL(editUser(QTreeWidgetItem*)),
 		this,
                 SLOT(menuActionEdit(QTreeWidgetItem*)));
+        connect(mainWindow,
+                SIGNAL(deleteUser(QTreeWidgetItem*)),
+                this,
+                SLOT(deleteContact(QTreeWidgetItem*)));
         connect(chats,
                 SIGNAL(infoRequest(QString)),
                 tlen,
@@ -434,10 +494,11 @@ void QTlenManager::openAvatarDialog()
 	{
 	    if((image.width() == 64) && (image.height() == 64))
 		emit saveAvatar(image);
-	    else
-		QMessageBox::warning(mainWindow,
-				     tr("Error"),
-				     tr("Image don't match allowed size 64x64px"));
+            else
+            {
+                image = image.scaled(64, 64, Qt::KeepAspectRatio, Qt::SmoothTransformation);
+                emit saveAvatar(image);
+            }
 	}
 	else
 	    QMessageBox::warning(mainWindow,
@@ -460,4 +521,9 @@ void QTlenManager::avatarSaved()
     settings->setValue("/avatar/present", true);
     mainWindow->lb_avatar->setPixmap(QPixmap(QString(QDir::homePath() + "/.qtlen4/avatar.png")), 32, 32);
     mainWindow->lb_avatar->setToolTip("<img src=\"" + QDir::homePath() + "/.qtlen4/avatar.png\" />");
+}
+
+void QTlenManager::openPublicChatsWindow()
+{
+   publicChats->showWindow();
 }

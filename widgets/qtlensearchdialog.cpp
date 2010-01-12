@@ -114,7 +114,6 @@ QTlenSearchDialog::~QTlenSearchDialog()
 	disconnect(tw_output);
 	disconnect(pb_search);
 	disconnect(pb_clear);
-	qDebug("search window deleted");
 }
 
 void QTlenSearchDialog::beginInfo(bool notEmpty)

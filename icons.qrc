@@ -30,7 +30,6 @@
         <file>icons/32x32/invisible.png</file>
         <file>icons/32x32/offline.png</file>
         <file>icons/64x64/default_av.png</file>
-        <file>qtlen4_pl.qm</file>
         <file>icons/64x64/look.png</file>
         <file>icons/64x64/network.png</file>
         <file>icons/64x64/roster.png</file>
@@ -38,5 +37,11 @@
         <file>icons/32x32/add.png</file>
         <file>icons/32x32/clear.png</file>
         <file>icons/32x32/search.png</file>
+        <file>icons/16x16/message.png</file>
+        <file>icons/16x16/admin.png</file>
+        <file>icons/16x16/banned.png</file>
+        <file>icons/16x16/owner.png</file>
+        <file>icons/16x16/superuser.png</file>
+        <file>icons/16x16/user.png</file>
     </qresource>
 </RCC>

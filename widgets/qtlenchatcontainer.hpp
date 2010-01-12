@@ -1,5 +1,6 @@
 #include <QtGui>
 #include "qtlenchatwindow.hpp"
+#include "defines.h"
 #ifndef QTLENCHATCONTAINER_HPP
 #define QTLENCHATCONTAINER_HPP
 
@@ -13,13 +14,16 @@ class QTlenChatContainer: public QMainWindow
         QStackedWidget          *stack;
         QTabBar                 *tabbar;
         QString                 title;
+        QIcon                   icon;
         QTimer                  *blinkTimer;
         void                    setTabText(QTlenChatWidget*, QString);
         void                    setTabColour(QTlenChatWidget*, QColor);
         void                    startBlinking();
+        void                    increasePendingMessages();
     private:
         QSettings		*settings;
         //QTabBar                 *tabbar;
+        int                     messages;
     private slots:
         void                    closeAndRemove(int tab);
         void                    tabChanged(int tab);

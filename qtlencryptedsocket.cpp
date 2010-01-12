@@ -80,7 +80,6 @@ void QTlenCryptedSocket::setCryptInfo(QString be, QString pq, QString iv)
     RSA_public_encrypt(plen, ptext_ex, ctext, RSAkey, RSA_NO_PADDING);
     QByteArray hash = QCA::arrayToHex(QByteArray((const char*)ctext, 64)).toAscii();
     QByteArray ivHash = QCA::arrayToHex(QByteArray((const char *)clientIv)).toAscii();
-    qDebug("<cipher k1='"+ hash +"' k2='"+ ivHash +"'/>");
     socket->write("<cipher k1='"+ hash +"' k2='"+ ivHash +"'/>");
 }
 

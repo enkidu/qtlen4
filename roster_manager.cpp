@@ -61,7 +61,23 @@ QString QTlenRosterManager::getNameOf(QString jid)
 		if( rosterItems[n].jid == jid )
 			return rosterItems[n].name;
 	return jid;
-};
+}
+
+RosterItem QTlenRosterManager::getRosterItem(QString jid)
+{
+    int index = getIndexOf(jid);
+    if (index != -1)
+        return rosterItems[index];
+    RosterItem item;
+    item.presence = Offline;
+    item.name = jid;
+    item.jid = jid;
+    item.desc = "";
+    item.subscription = "";
+    item.group = "";
+    item.avatar = QPixmap();
+    return item;
+}
 
 QString QTlenRosterManager::getGroupOf(QString jid)
 {
@@ -165,9 +181,11 @@ void QTlenRosterManager::presenceFrom(QString jid,
 void QTlenRosterManager::showRoster()
 {
 	for(int i = 0; i < addedItems.count(); i++)
-	{
-	    rosterBox->itemWidget(addedItems[i].item, 0)->deleteLater();
-	}
+        {
+            //all the items should be painted, not emulated by widgets
+            if (rosterBox->itemWidget(addedItems[i].item, 0))
+                rosterBox->itemWidget(addedItems[i].item, 0)->deleteLater();
+        }
 	rosterBox->clear();
 	qSort( rosterItems.begin(), rosterItems.end() );
 	addedItems.clear();
@@ -252,7 +270,6 @@ void QTlenRosterManager::setAvatar(QString jid, QPixmap avatar)
 	{
 	    rosterItems[index].avatar = avatar;
 	    this->showRoster();
-	    qDebug("Got avatar " + jid.toAscii());
 	}
 }
 

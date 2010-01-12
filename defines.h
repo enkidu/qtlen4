@@ -71,4 +71,6 @@ struct QTlenMessageStruct
 	QString		body;
 	QDateTime	dateTime;
 };
+
+Q_DECLARE_METATYPE(QTlenMessageStruct)
 #endif

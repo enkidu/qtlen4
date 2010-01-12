@@ -6,6 +6,8 @@
 #include "qtlencryptedsocket.h"
 #include "defines.h"
 #include "qtlen_parser.h"
+#include "chatroomnode.h"
+
 class QTlen: public QObject
 {
 	Q_OBJECT
@@ -33,10 +35,23 @@ class QTlen: public QObject
                 QByteArray          tlenHash(QString, QString);
                 QTlenMailConfig     mailConfig;
                 QTimer              *pingTimer;
+                void                parse_s(QDomNode);
+                void                parse_cipher(QDomNode);
+                void                parse_avatar(QDomNode);
+                void                parse_m(QDomNode);
+                void                parse_message(QDomNode);
+                void                parse_iq(QDomNode);
+                void                parse_presence(QDomNode);
+                void                parse_p(QDomNode);
+                void                parse_n(QDomNode);
 	signals:
 		void		connecting();
 		void		connected();
 		void		disconnected();
+                //chats
+                void            chatMessage(QString, QString, QString, QString);
+                void            chatRoomNodeList(QString, QList<ChatRoomNode>);
+                void            chatPresence(QString, QString, int, bool);
 		//message from body timestamp
 		void		message(QString, QString, QDateTime);
 		void		typingStarted(QString);
@@ -77,7 +92,18 @@ class QTlen: public QObject
 		void		setSubscribed(QString, bool);
 		void		getInfoAbout(QString);
 		void		deleteUser(QString);
+                //chats
 		void		chatsGetTopLevelGroups();
+                //group id
+                void            chatsExpandGroup(QString);
+                //room id, nick (may be null)
+                void            chatsJoinRoom(QString, QString);
+                //room id, body
+                void            chatsSendMessage(QString, QString);
+                //peer id, body
+                void            chatsSendPrivMessage(QString, QString);
+                //room id
+                void            chatsLeaveRoom(QString);
 		void 		saveRosterItem(QString, QString, QString);
 		void		saveMyInfo(QTlenUserInfo);
 		void		searchUsers(QTlenUserInfo);

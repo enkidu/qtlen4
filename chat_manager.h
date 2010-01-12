@@ -4,6 +4,7 @@
 #include "roster_manager.h"
 #include "systrayicon.h"
 #include "historymanager.hpp"
+#include "defines.h"
 class QTlenChatManager: public QObject
 {
 	Q_OBJECT
@@ -19,12 +20,14 @@ class QTlenChatManager: public QObject
 		void			setTrayIcon(QTlenTrayIcon* icon){this->sysIcon = icon;}
 		QTlenRosterManager	*roster;
 		QTlenHistoryManager	*history;
+                void                    enableHistory(bool);
 	private:
-		QList<ChatItem>		chats;
+                QList<ChatItem>		chats;
 		QString 		myNick;
 		QString			myJid;
 		QTlenTrayIcon*		sysIcon;
                 QTlenChatContainer*     container;
+                bool                    useHistory;
 	public slots:
 		void			showMessage(QString, QString, QDateTime);
 		void			detachWidget(QString);
@@ -33,13 +36,17 @@ class QTlenChatManager: public QObject
 		void			messageProxy(QString, QString);
 		void			typingStarted(QString);
 		void			typingStopped(QString);
+                       void                                 presenceFrom(QString, QTlenPresence, QString, QString, QString);
                 QTlenChatWidget*	createWindow(QString);
                 void                    getImage(QString rt, QString idt, QString sender);
                 void                    gotImage(QString from, QPixmap image);
+                void                    lastMessages(QString, const QList<QTlenMessageStruct>&);
 	signals:
 		void			sendMessage(QString, QString);
 		void			sendTyping(QString, bool);
                 void                    infoRequest(QString);
+                void                    fetchLastMessages(QString, int);
+                void                    saveMessage(const QString&, const QString&, const QString&, const QDateTime&);
 };
 
 class QTlenImageFetcher : public QObject

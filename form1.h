@@ -9,7 +9,7 @@
 #include "widgets/qtlensearchdialog.hpp"
 #include "historymanager.hpp"
 #include "avatarsmanager.hpp"
-#include "qtlenpublicchatswindow.hpp"
+#include "qtlenpublicchatsmanager.hpp"
 #include <QMessageBox>
 #include <QTextCodec>
 #include <QtGui>
@@ -31,6 +31,7 @@ class QTlenManager: public QObject
 		QTlenDebugWindow	*debug;
 		QTlenChatManager	*chats;
 		QTlenHistoryManager	*history;
+                QTlenPublicChatsManager *publicChats;
         public slots:
 		void		showMessage(QString, QString, QDateTime);
 		void		respondForAuthenticated();
@@ -59,6 +60,7 @@ class QTlenManager: public QObject
 		void		openAvatarDialog();
 		void		avatarSavingError();
 		void		avatarSaved();
+                void            openPublicChatsWindow();
 	signals:
 		void		sendMessage(QString, QString);
                 void		setStatus(int, QString);

@@ -7,18 +7,6 @@ QTlenMainWindow::QTlenMainWindow(QWidget * parent, Qt::WFlags f):QMainWindow(par
     resize(328, 388); //TODO: wczytywanie zapamiętanych wartości
     setWindowTitle("QTlen4");
 
-    QIcon icon1;
-    QIcon icon2;
-    QIcon icon3;
-    QIcon icon4;
-    QIcon icon5;
-    QIcon icon6;
-    QIcon icon7;
-    QIcon icon8;
-    QIcon icon9;
-    QIcon icon10;
-    QIcon icon11;
-
     icon1.addPixmap(QPixmap(QString::fromUtf8(":/icons/icons/configure.png")), QIcon::Normal, QIcon::Off);
     icon2.addPixmap(QPixmap(QString::fromUtf8(":/icons/icons/user-properties.png")), QIcon::Normal, QIcon::Off);
     icon3.addPixmap(QPixmap(QString::fromUtf8(":/icons/icons/application-exit.png")), QIcon::Normal, QIcon::Off);
@@ -30,6 +18,7 @@ QTlenMainWindow::QTlenMainWindow(QWidget * parent, Qt::WFlags f):QMainWindow(par
     icon9.addPixmap(QPixmap(QString::fromUtf8(":/icons/icons/16x16/dnd.png")), QIcon::Normal, QIcon::Off);
     icon10.addPixmap(QPixmap(QString::fromUtf8(":/icons/icons/16x16/invisible.png")), QIcon::Normal, QIcon::Off);
     icon11.addPixmap(QPixmap(QString::fromUtf8(":/icons/icons/16x16/offline.png")), QIcon::Normal, QIcon::Off);
+    this->setWindowIcon(icon11);
 
     centralwidget   = new QWidget(this);
 
@@ -135,6 +124,40 @@ QTlenMainWindow::QTlenMainWindow(QWidget * parent, Qt::WFlags f):QMainWindow(par
 	    SIGNAL(triggered()),
 	    qApp,
 	    SLOT(aboutQt()));
+    connect(this->cb_status,
+            SIGNAL(currentIndexChanged(int)),
+            this,
+            SLOT(setStatus(int)));
+}
+
+void QTlenMainWindow::setStatus(int number)
+{
+    switch (number)
+    {
+        case 0:
+            this->setWindowIcon(icon5);
+            break;
+        case 1:
+            this->setWindowIcon(icon6);
+            break;
+        case 2:
+            this->setWindowIcon(icon7);
+            break;
+        case 3:
+            this->setWindowIcon(icon8);
+            break;
+        case 4:
+            this->setWindowIcon(icon9);
+            break;
+        case 5:
+            this->setWindowIcon(icon10);
+            break;
+        case 6:
+            this->setWindowIcon(icon11);
+            break;
+        default:
+            this->setWindowIcon(icon11);
+    }
 }
 
 void QTlenMainWindow::closeEvent(QCloseEvent *event)

@@ -4,6 +4,8 @@
 #include "defines.h"
 #include <QtNetwork>
 #include <QPixmap>
+#include <QtSql>
+
 class QTlenAvatarsManager : public QObject
 {
     Q_OBJECT
@@ -15,6 +17,7 @@ class QTlenAvatarsManager : public QObject
     private:
         QString path;
 	QDir dir;
+        QSqlDatabase db;
 };
 
 class QTlenAvatarsFetcher : public QObject

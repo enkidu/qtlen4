@@ -7,6 +7,7 @@
 #include <QSettings>
 #include <QtGui>
 #include <QTextDocument>
+#include <QWebView>
 #include "qtlentextedit.hpp"
 
 #include "defines.h"
@@ -16,7 +17,7 @@ class QTlenChatWidget: public QWidget
 	Q_OBJECT
 	public:
                 QTlenChatWidget(QWidget * parent = 0, Qt::WFlags f = 0 );
-                ~QTlenChatWidget(){qDebug("chat window closed");}
+                ~QTlenChatWidget(){}
 		void setContactInfo(QString, QString);
 		void setMyInfo(QString);
                 //QAction *actionTyping;
@@ -24,7 +25,7 @@ class QTlenChatWidget: public QWidget
                 //QAction *actionImage;
                 //QWidget *centralwidget;
                 QVBoxLayout *verticalLayout;
-		QTextBrowser *te_chatWindow;
+                QWebView *te_chatWindow;
                 QTlenTextEdit *te_chatInput;
                 //QToolBar    *toolBar;
 		QTimer	    *timer;
@@ -35,16 +36,17 @@ class QTlenChatWidget: public QWidget
 		QSettings		*settings;
 		QString			myColor, myBg, chatColor, chatBg;
 		QString			formatMessage(QDateTime, QString, QString, QString);
-		QScrollBar		*vertScroll;
 		QTextDocument		*document;
 		QTextCursor		cursor;
+                QString                 header;
+                QString                 footer;
 	public slots:
 		void			showMessage(const QString,const QDateTime);	//body i stamp
 		void			sendMessage();
 		void			setTyping(bool);
 		void			showPreviousMessages(const QList<QTlenMessageStruct>);
 		void			showNotify(const QString);
-                void                    showImage(QPixmap image);
+                        void                    showImage(QPixmap image);
 	private slots:
 		void			keyPressHandler();
 		void			typingStopped();
