@@ -23,77 +23,62 @@ void QTlenCryptedSocket::connectToHost(QString host, quint16 port)
 
 void QTlenCryptedSocket::setCryptInfo(QString be, QString pq, QString iv)
 {
-    //te dane niestety wkompilujemy na stałe (na razie)
-    static unsigned char siv[] = "\x71\x77\x65\x72\x74\x79\x75\x69\x61\x73\x64\x66\x67\x68\x6a\x6b";
-    serverIv = siv;
-    static unsigned char n[] =
-        "\x15\x54\xa7\x87\x3b\x24\xbb\x3e\x0c\x01\x01\x67\x5e\x01\x8f\xe1"
-        "\x84\xfa\x3c\x9e\x66\xe8\x0a\x4c\x33\xb6\xf2\x55\x2e\x7e\x9c\x2b"
-        "\x67\x18\x65\xe1\xb5\x6c\xe1\x70\x18\x04\xc5\x50\xcf\x12\x4a\x86"
-        "\x14\xb2\x5e\x1f\x66\xc1\xc5\x8a\x62\x9f\x7b\xe9\x4b\x36\x50\xfd";
+    QByteArray ba_be, ba_pq, ba_iv;
 
-    static unsigned char e[] = "\x01\x00\x01";
-
-    RSA *RSAkey;
-    unsigned char ctext[256];
-    unsigned char * key = random(16);
-    static unsigned char ptext_ex[] =
-            "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-            "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-            "\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00\x00"
-            "\xc7\x3b\x79\xe1\x72\xd2\x2b\xa4\xd8\xd0\xde\xc8\xf8\x0b\x9c\x7c";
-    int i = 0;
-    for (int i = 0; i < 48; i++)
-    {
-        ptext_ex[i] = 0;
-    }
-    for (int i = 48; i < 64; i++)
-    {
-        ptext_ex[i] = key[i-48];
-    }
-    static unsigned char ptext_exx[]= "\xc7\x3b\x79\xe1\x72\xd2\x2b\xa4\xd8\xd0\xde\xc8\xf8\x0b\x9c\x7c";
-    unsigned char * tiv = random(16);
-    for (int i = 0; i < 16; i++)
-    {
-        ptext_exx[i] = tiv[i];
-    }
-    aesKey = key;
-    clientIv = ptext_exx;
-
-    int plen;
-
+    //server initialisation vector
+    ba_iv = QByteArray::fromHex(iv.toAscii());
+    char* c_iv = new char[ba_iv.size()];
+    strcpy(c_iv, ba_iv.data());
+    serverIv = (unsigned char*)c_iv;
+    //RSA n & e
     CRYPTO_malloc_debug_init();
     CRYPTO_dbg_set_options(V_CRYPTO_MDEBUG_ALL);
     CRYPTO_mem_ctrl(CRYPTO_MEM_CHECK_ON);
 
-    plen = sizeof(ptext_ex) - 1;
+    RSA *RSAkey = RSA_new();
+    ba_be = QByteArray::fromHex(be.size() %2 ? be.prepend("0").toAscii() : be.toAscii());
+    ba_pq = QByteArray::fromHex(pq.toAscii());
+    RSAkey->n = BN_bin2bn((const unsigned char*)ba_pq.data(),
+                          ba_pq.size(),
+                          RSAkey->n);
+    RSAkey->e = BN_bin2bn((const unsigned char*)ba_be.data(),
+                          ba_be.size(),
+                          RSAkey->e);
+    //key generation
+    aesKey = new unsigned char[16];
+    //maybe strange but needed
+    do {} while(!RAND_bytes(aesKey, 16));
+    unsigned char *ptext_ex = (unsigned char*)malloc(64);
+    for (int i = 0; i < 48; i++)
+        *(ptext_ex+i) = 0;
+    memcpy(ptext_ex+48,aesKey,16);
+    clientIv = new unsigned char[16];
+    do {} while(!RAND_bytes(clientIv, 16));
 
-    RSAkey = RSA_new();
-    RSAkey->n = BN_bin2bn(n, sizeof(n)-1, RSAkey->n);
-    RSAkey->e = BN_bin2bn(e, sizeof(e)-1, RSAkey->e);
-    RSAkey->d = NULL;
-    RSAkey->p = NULL;
-    RSAkey->q = NULL;
-    RSAkey->dmp1 = NULL;
-    RSAkey->dmq1 = NULL;
-    RSAkey->iqmp = NULL;
-    RSA_public_encrypt(plen, ptext_ex, ctext, RSAkey, RSA_NO_PADDING);
-    QByteArray hash = QCA::arrayToHex(QByteArray((const char*)ctext, 64)).toAscii();
-    QByteArray ivHash = QCA::arrayToHex(QByteArray((const char *)clientIv)).toAscii();
-    socket->write("<cipher k1='"+ hash +"' k2='"+ ivHash +"'/>");
+    unsigned char ctext[256];
+    //64 - lenght of ptext_ex
+    RSA_public_encrypt(64, ptext_ex, ctext, RSAkey, RSA_NO_PADDING);
+    QByteArray hash = QByteArray((const char*)ctext, 64).toHex();
+    QByteArray ivHash = QByteArray((const char *)clientIv,16).toHex();
+    write("<cipher k1='"+ hash +"' k2='"+ ivHash +"'/>");
 }
 
 void QTlenCryptedSocket::write(QByteArray data)
 {
     QByteArray u;
     if (!crypted)
+    {
         u = data;
+        qDebug() << "\033[0;40;36m"<< "unencrypted" <<"\033[0m";
+    }
     else
     {
         u = AESEncrypt(data);
 
     }
+    qDebug() << "\033[0;40;32m<< " << data << "\033[0m";
     socket->write(u);
+    qDebug() << "\033[0;40;36m<< " << socket->errorString() <<"\033[0m";
 }
 
 void QTlenCryptedSocket::disconnectFromHost()
@@ -164,27 +149,4 @@ QByteArray QTlenCryptedSocket::AESDecrypt(QByteArray data)
             output.append((const char *)outbuf, size);
         }
         return output;
-}
-
-unsigned char * QTlenCryptedSocket::random(int size)
-{
-        char * buffer;
-        char * byte;
-        int i;
-        std::ifstream is;
-        is.open("/dev/random", std::ios::binary);
-        buffer = new char [size];
-        byte = new char [1];
-        i = 0;
-        while (i < size)
-        {
-            is.read(byte, 1);
-            if (byte != 0)
-            {
-                buffer[i] = byte[0];
-                i++;
-            }
-        }
-        is.close();
-        return (unsigned char *)buffer;
 }

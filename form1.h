@@ -1,7 +1,8 @@
 #include "qtlen.h"
 #include "widgets/systrayicon.h"
 #include "widgets/qtlenmainwindow.hpp"
-#include "chat_manager.h"
+//#include "chat_manager.h"
+#include "privacymanager.hpp"
 #include "debug.h"
 #include "edit_dialog.h"
 #include "settings_dialog.h"
@@ -13,7 +14,7 @@
 #include <QMessageBox>
 #include <QTextCodec>
 #include <QtGui>
-#include <QAbstractSocket>
+#include <QtNetwork/QAbstractSocket>
 #include <QCloseEvent>
 
 
@@ -31,6 +32,7 @@ class QTlenManager: public QObject
 		QTlenDebugWindow	*debug;
 		QTlenChatManager	*chats;
 		QTlenHistoryManager	*history;
+                PrivacyManager     *privacy;
                 QTlenPublicChatsManager *publicChats;
         public slots:
 		void		showMessage(QString, QString, QDateTime);

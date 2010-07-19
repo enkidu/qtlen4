@@ -2,9 +2,9 @@
 #define AVATARSMANAGER_HPP
 #include <QtCore>
 #include "defines.h"
-#include <QtNetwork>
+#include <QtNetwork/QtNetwork>
 #include <QPixmap>
-#include <QtSql>
+#include <QtSql/QtSql>
 
 class QTlenAvatarsManager : public QObject
 {

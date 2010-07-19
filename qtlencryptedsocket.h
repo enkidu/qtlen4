@@ -2,9 +2,7 @@
 #define QTLENCRYPTEDSOCKET_H
 
 #include <QObject>
-#include <QtNetwork>
-//tylko dla paru udogodnień
-#include <QtCrypto>
+#include <QtNetwork/QtNetwork>
 #include <openssl/aes.h>
 class QTlenCryptedSocket : public QObject
 {
@@ -21,7 +19,6 @@ private:
     QByteArray                      AESDecrypt(QByteArray);
     unsigned char                   *aesKey;
     QByteArray                      prebuffer;
-    unsigned char                   *random(int);
 public slots:
     void write(QByteArray);
     void switchCrypted(bool);

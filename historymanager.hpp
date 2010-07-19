@@ -1,7 +1,7 @@
 #ifndef HISTORYMANAGER_HPP
 #define HISTORYMANAGER_HPP
 #include <QtCore>
-#include <QtSql>
+#include <QtSql/QtSql>
 #include "defines.h"
 #include <QThread>
 

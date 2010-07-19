@@ -24,6 +24,7 @@ class QTlenMainWindow: public QMainWindow
         QAction *actionShowOfflines;
         QAction *actionXMLConsole;
         QAction *actionChats;
+        QAction *actionPrivacy;
         QAction *actionSearch;
         QWidget *centralwidget;
 

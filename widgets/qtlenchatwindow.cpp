@@ -1,5 +1,5 @@
     #include "qtlenchatwindow.hpp"
-#include <QWebFrame>
+#include <QtWebKit/QWebFrame>
 QTlenChatWidget::QTlenChatWidget(QWidget * parent, Qt::WFlags f):QWidget(parent, f)
 {
     settings        = new QSettings(QDir::homePath() + "/.qtlen4/config", QSettings::IniFormat);

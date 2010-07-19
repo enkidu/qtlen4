@@ -41,6 +41,10 @@ QTlenManager::QTlenManager():QObject()
             connect(tlen, SIGNAL(presenceFrom(QString,QTlenPresence,QString,QString,QString)),
                     chats, SLOT(presenceFrom(QString,QTlenPresence,QString,QString,QString)));
             qRegisterMetaType<QList<QTlenMessageStruct> >("QList<QTlenMessageStruct>");
+
+        privacy = new PrivacyManager(chats, roster);
+
+
         connect(history,
                 SIGNAL(lastMessages(QString, const QList<QTlenMessageStruct>&)),
                 chats,
@@ -127,7 +131,7 @@ QTlenManager::QTlenManager():QObject()
                 SIGNAL(autorizationRequest(QString)),
                 mainWindow,
                 SLOT(subscriptionRequestReceived(QString)));
-        connect(tlen,
+        /*connect(tlen,
                 SIGNAL(typingStarted(QString)),
                 chats,
                 SLOT(typingStarted(QString)));
@@ -138,7 +142,46 @@ QTlenManager::QTlenManager():QObject()
         connect(tlen,
                 SIGNAL(message(QString, QString, QDateTime)),
                 chats,
+                SLOT(showMessage(QString, QString, QDateTime)));*/
+
+        connect(tlen,
+                SIGNAL(typingStarted(QString)),
+                privacy,
+                SLOT(gotTypingStarted(QString)));
+        connect(tlen,
+                SIGNAL(typingStopped(QString)),
+                privacy,
+                SLOT(gotTypingStopped(QString)));
+
+        connect(privacy,
+                SIGNAL(forwardTypingStarted(QString)),
+                chats,
+                SLOT(typingStarted(QString)));
+        connect(privacy,
+                SIGNAL(forwardTypingStopped(QString)),
+                chats,
+                SLOT(typingStopped(QString)));
+
+        connect(privacy,
+                SIGNAL(reply(QString,QString)),
+                tlen,
+                SLOT(sendMessage(QString,QString)));
+
+        connect(tlen,
+                SIGNAL(message(QString, QString, QDateTime)),
+                privacy,
+                SLOT(gotMessage(QString, QString, QDateTime)));
+
+        connect(privacy,
+                SIGNAL(forwardMessage(QString, QString, QDateTime)),
+                chats,
                 SLOT(showMessage(QString, QString, QDateTime)));
+
+        connect(mainWindow->actionPrivacy,
+                SIGNAL(triggered()),
+                privacy,
+                SLOT(show()));
+
         connect(tlen,
                 SIGNAL(connecting()),
                 this,

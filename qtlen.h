@@ -1,6 +1,6 @@
-#include <QtNetwork>
-#include <QAbstractSocket>
-#include <QtXml>
+#include <QtNetwork/QtNetwork>
+#include <QtNetwork/QAbstractSocket>
+#include <QtXml/QtXml>
 #include <QTimer>
 #include <QDateTime>
 #include "qtlencryptedsocket.h"

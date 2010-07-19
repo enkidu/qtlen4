@@ -1,6 +1,6 @@
 #ifndef QTLEN_PARSER_H
 #define QTLEN_PARSER_H
-#include <QtXml>
+#include <QtXml/QtXml>
 #include <QtCore>
 #include "defines.h"
 /*class QTlenParser : public QObject

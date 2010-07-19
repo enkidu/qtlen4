@@ -6,15 +6,14 @@ TARGET =
 DEPENDPATH += . \
     widgets
 INCLUDEPATH += . \
-    widgets \
-    /usr/include/QtCrypto
+    widgets
 QT += xml \
     network \
     sql \
     dbus \
     webkit
 LIBS += -lssl \
-    -lqca
+    -lcrypto
 
 # Input
 HEADERS += chat_manager.h \
@@ -47,7 +46,8 @@ HEADERS += chat_manager.h \
     widgets/qtlenrosteritemdelegate.hpp \
     chatroomnode.h \
     qtlenpublicchatwidget.h \
-    textdocument.hpp
+    textdocument.hpp \
+    privacymanager.hpp
 FORMS += config.ui \
     debug.ui \
     info_edit.ui \
@@ -81,6 +81,7 @@ SOURCES += chat_manager.cpp \
     widgets/qtlenrosteritem.cpp \
     widgets/qtlenrosteritemdelegate.cpp \
     qtlenpublicchatwidget.cpp \
-    textdocument.cpp
+    textdocument.cpp \
+    privacymanager.cpp
 RESOURCES += icons.qrc
 TRANSLATIONS = qtlen4_pl.ts

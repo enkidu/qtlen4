@@ -92,7 +92,6 @@ int QTlenRosterItem::paint(QPainter *painter, const QRect &rect, const QPalette 
      QFontMetrics fm(descFont);
      QRect rect = fm.boundingRect(0,0,tree->width()-88,160, (int)(Qt::AlignLeft | Qt::TextWordWrap), desc);
      int h = rect.height();
-     qDebug(QByteArray::number(h));
      if ((h + 44) < 68)
          return QSize(160, 68);
      return QSize(160, h+44);

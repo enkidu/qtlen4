@@ -104,6 +104,7 @@ QTlenMainWindow::QTlenMainWindow(QWidget * parent, Qt::WFlags f):QMainWindow(par
     actionXMLConsole    = new QAction(icon4, tr("XML console"), menuMenu);
     actionXMLConsole    ->setCheckable(true);
     actionChats         = new QAction(tr("Tlen.pl chats"), menuMenu);
+    actionPrivacy       = new QAction(tr("Privacy"), menuMenu);
     actionSearch        = new QAction(tr("Search for contacts"), menuMenu);
     actionAboutQTlen    = new QAction(tr("About..."), menuHelp);
     actionAboutQt       = new QAction(tr("About Qt4"), menuHelp);
@@ -114,6 +115,7 @@ QTlenMainWindow::QTlenMainWindow(QWidget * parent, Qt::WFlags f):QMainWindow(par
     menuMenu->addAction(actionMyInfo);
     menuMenu->addAction(actionSearch);
     menuMenu->addAction(actionChats);
+    menuMenu->addAction(actionPrivacy);
     menuMenu->addSeparator();
     menuMenu->addAction(actionXMLConsole);
     menuMenu->addSeparator();

@@ -1,5 +1,4 @@
 #include "qtlen.h"
-#include <QtCrypto>
 QTlen::QTlen():QObject()
 {
 	http = new QHttp;
@@ -91,6 +90,7 @@ void QTlen::parseResponse(QByteArray input)
 {
     //debug, żeby sobie poczytać, o czym gada z nami serwer
     emit receivedXml(input);
+    qDebug() << "\033[0;40;31m>> "<< input << "\033[0m";
     //profilaktycznie puszczamy pinga
     //socket->write("  \t  ");
     QDomDocument doc("");

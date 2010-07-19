@@ -7,7 +7,7 @@
 #include <QSettings>
 #include <QtGui>
 #include <QTextDocument>
-#include <QWebView>
+#include <QtWebKit/QWebView>
 #include "qtlentextedit.hpp"
 
 #include "defines.h"
